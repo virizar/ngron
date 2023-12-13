@@ -30,6 +30,7 @@ type
 proc newJsonParser*() : JsonParser =
   new(result)
   result.data = ""
+  result.path = newStringOfCap(4096)
   result.current = 0
 
 # forward declarations
@@ -41,7 +42,9 @@ proc emit(self : JsonParser, obj : string) =
     return
   
   if self.colorize : stdout.resetAttributes()
-  stdout.writeLine(fmt("{self.path} = {obj};") )
+  stdout.write(self.path)
+  stdout.write(" = ")
+  stdout.writeLine(obj) 
   stdout.flushFile()
 
 proc emit(self : JsonParser, obj : JsonObject) = 
@@ -50,18 +53,21 @@ proc emit(self : JsonParser, obj : JsonObject) =
     return
   
   if self.colorize : stdout.resetAttributes()
-  stdout.write(fmt("{self.path} = ") )
+  stdout.write(self.path)
+  stdout.write(" = ")
   
   case obj.kind:
   of Number, Boolean, Null:
     if self.colorize :stdout.setForeGroundColor(Color(0x006882))
-    stdout.write(fmt("{self.data[obj.startP..<obj.endP]}"))
+    stdout.write(self.data[obj.startP..<obj.endP])
     if self.colorize :stdout.resetAttributes()
     stdout.writeLine(";")
     stdout.flushFile()
   of String:
     if self.colorize :stdout.setForeGroundColor(Color(0xCD853F))
-    stdout.write(fmt("\"{self.data[obj.startP..<obj.endP]}\""))
+    stdout.write("\"")
+    stdout.write(self.data[obj.startP..<obj.endP])
+    stdout.write("\"")
     if self.colorize :stdout.resetAttributes()
     stdout.writeLine(";")
     stdout.flushFile()
@@ -200,10 +206,13 @@ proc parseObject(self : JsonParser) : JsonObject =
     discard self.consume('\"', "Expected string as key for object")
 
     let key =  self.parseString()
-    var pathAppend = fmt(".{self.data[key.startP..<key.endP]}")
+    var pathAppend = "."
+    pathAppend &= self.data[key.startP..<key.endP]
     for character in self.data[key.startP..<key.endP]:
       if not isAlphaExt(character):
-        pathAppend = fmt("[\"{self.data[key.startP..<key.endP]}\"]")
+        pathAppend = "[\""
+        pathAppend &= self.data[key.startP..<key.endP]
+        pathAppend &= "\"]"
         break
 
     self.path &= pathAppend
@@ -245,8 +254,11 @@ proc parseArray(self : JsonParser) : JsonObject =
     if isWhitespace(self.peek()):
       discard self.advance()
       continue
+    
+    self.path &= "["
+    self.path &= $index
+    self.path &= "]"
 
-    self.path &= fmt"[{index}]"
     let item = self.parseValue()
     if not self.silent:
       case item.kind:
