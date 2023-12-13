@@ -1,0 +1,9 @@
+callgrind.*
+ngron
+profile_results.txt
+gron/
+
+tests/*
+!tests/*.nim
+!tests/*.nims
+!tests/resources
