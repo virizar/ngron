@@ -1,5 +1,6 @@
 import std/strformat
 import std/strutils
+import std/enumerate
 import std/algorithm
 include styles
 
@@ -58,6 +59,76 @@ proc sortKeys(self : JsonObject, data : string, ascending  : bool = true) =
   else:
     discard
 
+proc dumpJson(self : JsonObject, data : string, level : int = 0, indent : int = 2,  colorize : bool = false) =
+
+  case self.kind:
+  of String:
+    if colorize : stdout.write(STRING_COLOR)
+    stdout.write("\"")
+    stdout.write(data[self.startP..<self.endP])
+    stdout.write("\"")
+    if colorize: stdout.write(COLOR_END)
+    stdout.flushFile()
+  of Boolean, Null:
+    if colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    stdout.write(data[self.startP..<self.endP])
+    if colorize: stdout.write(COLOR_END)
+    stdout.flushFile()
+  of Number:
+    if colorize : stdout.write(NUMBER_COLOR)
+    stdout.write(data[self.startP..<self.endP])
+    if colorize: stdout.write(COLOR_END)
+    stdout.flushFile()  
+  of Object:
+    if colorize:
+      stdout.write(STYLED_LEFT_CURLY_BRACE)
+      stdout.write("\n")
+    else:
+      stdout.write("{\n")
+    for i, obj in enumerate(self.itemPairs):
+      let rawKey = data[obj.key.startP..<obj.key.endP]
+      stdout.write(' '.repeat(level + indent))
+      if colorize:
+        stdout.write(KEY_COLOR)
+        stdout.write("\"")
+        stdout.write(rawKey)
+        stdout.write("\"")
+        stdout.write(COLOR_END)
+      else:
+        stdout.write("\"")
+        stdout.write(rawKey)
+        stdout.write("\"")
+      stdout.write(": ")
+      obj.value.dumpJson(data = data, level = level + indent,  colorize = colorize)
+      if i != self.itemPairs.len - 1:
+        stdout.writeLine(",")
+      else:
+        stdout.write("\n")
+    stdout.write(' '.repeat(level))
+    if colorize:
+      stdout.write(STYLED_RIGHT_CURLY_BRACE)
+    else:
+      stdout.write("}")
+    stdout.flushFile() 
+  of Array:
+    if colorize:
+      stdout.write(STYLED_LEFT_BRACKET)
+      stdout.write("\n")
+    else:
+      stdout.write("[\n")
+    for i, obj in enumerate(self.items):
+      stdout.write(' '.repeat(level + indent))
+      obj.dumpJson(data = data, level = level + indent,  colorize = colorize)
+      if i != self.items.len - 1:
+        stdout.writeLine(",")
+      else:
+        stdout.write("\n")
+    stdout.write(' '.repeat(level))
+    if colorize:
+      stdout.write(STYLED_RIGHT_BRACKET)
+    else:
+      stdout.write("]")
+    stdout.flushFile() 
 proc dumpGron(self : JsonObject, data : string,  path : string = "", colorize : bool = false) =
   
   case self.kind:
