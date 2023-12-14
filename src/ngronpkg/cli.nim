@@ -36,14 +36,12 @@ proc runCli*(params : seq[string]) =
 
     let f =  open(opts.input)
     defer: f.close()
-
-    var parser = newJsonParser()
     
     if opts.validate:
-      parser.parse(f.readAll(), silent = true, sort = opts.sort, colorize = opts.colorize)
+      stringToGron(f.readAll(), silent = true, sort = opts.sort, colorize = opts.colorize)
       echo "FILE OK"
     else:
-      parser.parse(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize)
+      stringToGron(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize)
 
   except ShortCircuit as err:
     if err.flag == "argparse_help":

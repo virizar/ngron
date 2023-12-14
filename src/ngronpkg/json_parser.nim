@@ -14,13 +14,16 @@ type
     
   JsonParserException* = ref Exception
 
-proc newJsonParser*() : JsonParser =
-  new(result)
-  result.data = ""
-  result.current = 0
-
 # forward declarations
 proc parseValue(self : JsonParser) : JsonPointerTree 
+
+proc newJsonParser(data : string, silent :bool, colorize : bool , sort: bool) : JsonParser = 
+  new(result)
+  result.current = 0
+  result.data = data
+  result.silent = silent
+  result.colorize = colorize
+  result.sort = sort
 
 proc error(self : JsonParser, msg : string, span : int = 5) = 
   
@@ -219,17 +222,13 @@ proc parseValue(self : JsonParser) : JsonPointerTree =
 
       self.error(fmt("Cannot parse character '{curChar}'"))  
 
-proc parse*(self : JsonParser, data : string, silent : bool = false, sort : bool = false, colorize : bool = false) =
+proc stringToGron*(data : string, silent : bool = false, sort : bool = false, colorize : bool = false) =
 
-  self.current = 0
-  self.data = data
-  self.silent = silent
-  self.colorize = colorize
-  self.sort = sort
+  var parser = newJsonParser(data, silent, colorize, sort)
 
-  let jsonObject = self.parseValue()
+  let jsonPointerTree = parser.parseValue()
 
-  jsonObject.dumpGron(data, path = "json", colorize = self.colorize)
+  jsonPointerTree.dumpGron(data, path = "json", colorize = colorize)
 
 
 
