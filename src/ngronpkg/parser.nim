@@ -1,7 +1,28 @@
 import strformat
 import strutils
 import terminal
-import colors
+
+const COLOR_RED = "\e[31m"
+const COLOR_GREEN = "\e[32m"
+const COLOR_YELLOW = "\e[33m"
+const COLOR_BLUE = "\e[34m"
+const COLOR_MAGENTA = "\e[35m"
+const COLOR_CYAN = "\e[36m"
+const COLOR_GRAY = "\e[37m"
+const COLOR_END = "\e[0m"
+
+const BRACKET_COLOR = COLOR_MAGENTA
+const CURLY_BRACE_COLOR = COLOR_MAGENTA
+const NUMBER_COLOR = COLOR_RED
+const STRING_COLOR = COLOR_YELLOW
+const KEY_COLOR = COLOR_CYAN
+const BOOLEAN_NULL_COLOR = COLOR_BLUE
+
+const STYLED_LEFT_BRACKET = BRACKET_COLOR & "[" & COLOR_END
+const STYLED_RIGHT_BRACKET = BRACKET_COLOR & "]" & COLOR_END
+
+const STYLED_LEFT_CURLY_BRACE = CURLY_BRACE_COLOR & "{" & COLOR_END
+const STYLED_RIGHT_CURLY_BRACE = CURLY_BRACE_COLOR & "}" & COLOR_END
 
 type
   JsonParser* = ref object 
@@ -52,23 +73,28 @@ proc emit(self : JsonParser, obj : JsonObject) =
   if self.silent:
     return
   
-  if self.colorize : stdout.resetAttributes()
   stdout.write(self.path)
   stdout.write(" = ")
   
   case obj.kind:
-  of Number, Boolean, Null:
-    if self.colorize :stdout.setForeGroundColor(Color(0x006882))
+  of Number:
+    if self.colorize : stdout.write(NUMBER_COLOR)
     stdout.write(self.data[obj.startP..<obj.endP])
-    if self.colorize :stdout.resetAttributes()
+    if self.colorize: stdout.write(COLOR_END)
+    stdout.writeLine(";")
+    stdout.flushFile()  
+  of Boolean, Null:
+    if self.colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    stdout.write(self.data[obj.startP..<obj.endP])
+    if self.colorize: stdout.write(COLOR_END)
     stdout.writeLine(";")
     stdout.flushFile()
   of String:
-    if self.colorize :stdout.setForeGroundColor(Color(0xCD853F))
+    if self.colorize : stdout.write(STRING_COLOR)
     stdout.write("\"")
     stdout.write(self.data[obj.startP..<obj.endP])
     stdout.write("\"")
-    if self.colorize :stdout.resetAttributes()
+    if self.colorize: stdout.write(COLOR_END)
     stdout.writeLine(";")
     stdout.flushFile()
   else:
@@ -207,14 +233,28 @@ proc parseObject(self : JsonParser) : JsonObject =
 
     let key =  self.parseString()
     var pathAppend = "."
-    pathAppend &= self.data[key.startP..<key.endP]
+    if self.colorize : 
+      pathAppend &= KEY_COLOR
+      pathAppend &= self.data[key.startP..<key.endP]
+      pathAppend &= COLOR_END
+    else:
+      pathAppend &= self.data[key.startP..<key.endP]
     for character in self.data[key.startP..<key.endP]:
       if not isAlphaExt(character):
-        pathAppend = "[\""
-        pathAppend &= self.data[key.startP..<key.endP]
-        pathAppend &= "\"]"
-        break
+        if self.colorize : 
+          pathAppend = STYLED_LEFT_BRACKET
+          pathAppend &= STRING_COLOR
+          pathAppend &= "\""
+          pathAppend &= self.data[key.startP..<key.endP]
+          pathAppend &= "\""
+          pathAppend &= COLOR_END
+          pathAppend &= STYLED_RIGHT_BRACKET
+        else:
+          pathAppend = "[\""
+          pathAppend &= self.data[key.startP..<key.endP]
+          pathAppend &= "\"]"
 
+        break
     self.path &= pathAppend
     
     self.consumeWhitespace()
@@ -255,9 +295,16 @@ proc parseArray(self : JsonParser) : JsonObject =
       discard self.advance()
       continue
     
-    self.path &= "["
-    self.path &= $index
-    self.path &= "]"
+    if self.colorize:
+      self.path &= STYLED_LEFT_BRACKET
+      self.path &= NUMBER_COLOR
+      self.path &= $index
+      self.path &= COLOR_END
+      self.path &= STYLED_RIGHT_BRACKET
+    else:
+      self.path &= "["
+      self.path &= $index
+      self.path &= "]"
 
     let item = self.parseValue()
     if not self.silent:
@@ -304,23 +351,40 @@ proc parseValue(self : JsonParser) : JsonObject =
 
       self.error(fmt("Cannot parse character '{curChar}'"))  
 
-proc parse*(self : JsonParser, data : string, silent : bool = false, sort : bool = false) =
+proc parse*(self : JsonParser, data : string, silent : bool = false, sort : bool = false, colorize : bool = false) =
 
   self.current = 0
   self.data = data
   self.silent = silent
+  self.colorize = colorize
   self.sort = sort
-  self.path = "json"
+
+  if self.colorize:
+    self.path = KEY_COLOR
+    self.path &= "json"
+    self.path &= COLOR_END
+  else:
+    self.path &= "json"
   
   self.consumeWhitespace()  
 
   let curChar = self.advance()
   case curChar:
   of '{':
-      self.emit("{}")
+      if self.colorize:
+        var obj = STYLED_LEFT_CURLY_BRACE
+        obj &= STYLED_RIGHT_CURLY_BRACE
+        self.emit(obj)
+      else:
+        self.emit("{}")
       discard  self.parseObject()
   of '[':
-      self.emit("[]")
+      if self.colorize:
+        var obj = STYLED_LEFT_BRACKET
+        obj &= STYLED_RIGHT_BRACKET
+        self.emit(obj)
+      else:
+        self.emit("[]")
       discard self.parseArray()
   of '\'','\"':
       self.emit(self.parseString())
