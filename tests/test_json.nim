@@ -2,19 +2,15 @@
 import unittest
 import os
 import strutils
-import ngronpkg/parser
+import ngronpkg/json_parser
 
 test "gron basic":
     let file = "tests/resources/basic.json"
     let f =  open(file)
     defer: f.close()
-    var parser = newJsonParser()
-
-    parser.parse(f.readAll(), silent = false)
+    stringToGron(f.readAll(), silent = false, sort = false, colorize = false)
 
 test "gron validate":
-
-  var parser = newJsonParser()
 
   let folder = "tests/resources/*"
 
@@ -26,4 +22,4 @@ test "gron validate":
     let f =  open(path)
     defer: f.close()
 
-    parser.parse(f.readAll(), silent = true)
+    stringToGron(f.readAll(), silent = true, sort = false, colorize = false)
