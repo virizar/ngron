@@ -1,6 +1,6 @@
 import std/cmdline
 import std/options
-import parser
+import json_parser
 import argparse
 
 # Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable
