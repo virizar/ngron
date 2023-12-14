@@ -139,6 +139,23 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
     stdout.writeLine(";")
     stdout.flushFile()  
   of Object:
+    if colorize : 
+      stdout.write(KEY_COLOR)
+      stdout.write(path)
+      stdout.write(COLOR_END)
+    else:
+      stdout.write(path)
+    
+    stdout.write(" = ")
+
+    if colorize : 
+      stdout.write(STYLED_LEFT_CURLY_BRACE)
+      stdout.write(STYLED_RIGHT_CURLY_BRACE)
+    else:
+      stdout.write("{}")
+    
+    stdout.write(";\n")
+
     for obj in self.itemPairs:
       var pathAppend = "."
       let rawKey = data[obj.key.startP..<obj.key.endP]
@@ -166,12 +183,40 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
 
           break
       var currentPath = path & pathAppend
+
+      if colorize : 
+        currentPath = KEY_COLOR
+        currentPath &= path
+        currentPath &= COLOR_END
+        currentPath &= pathAppend
+
       obj.value.dumpGron(data = data, path = currentPath, colorize = colorize)
   of Array:
+
+    if colorize : 
+      stdout.write(KEY_COLOR)
+      stdout.write(path)
+      stdout.write(COLOR_END)
+    else:
+      stdout.write(path)
+    
+    stdout.write(" = ")
+
+    if colorize : 
+      stdout.write(STYLED_LEFT_BRACKET)
+      stdout.write(STYLED_RIGHT_BRACKET)
+    else:
+      stdout.write("[]")
+    
+    stdout.write(";\n")
+
     var index = 0
     for obj in self.items:
       var currentPath = path
       if colorize:
+        currentPath = KEY_COLOR
+        currentPath &= path 
+        currentPath &= COLOR_END
         currentPath &= STYLED_LEFT_BRACKET
         currentPath &= NUMBER_COLOR
         currentPath &= $index
