@@ -1,28 +1,7 @@
-import strformat
-import strutils
-import terminal
-
-const COLOR_RED = "\e[31m"
-const COLOR_GREEN = "\e[32m"
-const COLOR_YELLOW = "\e[33m"
-const COLOR_BLUE = "\e[34m"
-const COLOR_MAGENTA = "\e[35m"
-const COLOR_CYAN = "\e[36m"
-const COLOR_GRAY = "\e[37m"
-const COLOR_END = "\e[0m"
-
-const BRACKET_COLOR = COLOR_MAGENTA
-const CURLY_BRACE_COLOR = COLOR_MAGENTA
-const NUMBER_COLOR = COLOR_RED
-const STRING_COLOR = COLOR_YELLOW
-const KEY_COLOR = COLOR_CYAN
-const BOOLEAN_NULL_COLOR = COLOR_BLUE
-
-const STYLED_LEFT_BRACKET = BRACKET_COLOR & "[" & COLOR_END
-const STYLED_RIGHT_BRACKET = BRACKET_COLOR & "]" & COLOR_END
-
-const STYLED_LEFT_CURLY_BRACE = CURLY_BRACE_COLOR & "{" & COLOR_END
-const STYLED_RIGHT_CURLY_BRACE = CURLY_BRACE_COLOR & "}" & COLOR_END
+import std/strformat
+import std/strutils
+import std/terminal
+include styles
 
 type
   JsonParser* = ref object 
