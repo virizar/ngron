@@ -4,13 +4,13 @@ import os
 import strutils
 import ngronpkg/json_parser
 
-test "gron basic":
+test "json parser basic":
     let file = "tests/resources/basic.json"
     let f =  open(file)
     defer: f.close()
     stringToGron(f.readAll(), silent = false, sort = false, colorize = false)
 
-test "gron validate":
+test "json parser bulk validation":
 
   let folder = "tests/resources/*"
 
