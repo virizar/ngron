@@ -1,17 +1,17 @@
 import std/strformat
 import std/strutils
-import std/terminal
+import std/algorithm
 include styles
 
 type
   JsonParser* = ref object 
     current : int 
-    data : string
-    path : string
     silent : bool = false
     colorize : bool = false
     sort : bool = false
-  
+    data: string
+    jsonObject : JsonObject
+    
   JsonParserException* = ref Exception
 
   JsonObjectKind = enum
@@ -25,59 +25,113 @@ type
   JsonObject* = ref object
     startP* : int
     endP*: int
-    kind*: JsonObjectKind  
+    case kind*: JsonObjectKind  
+    of Array:
+      items*: seq[JsonObject]
+    of Object:
+      itemPairs*: seq[tuple[key: JsonObject, value: JsonObject]]
+    else:
+      discard
 
 proc newJsonParser*() : JsonParser =
   new(result)
   result.data = ""
-  result.path = newStringOfCap(4096)
   result.current = 0
 
 # forward declarations
 proc parseValue(self : JsonParser) : JsonObject 
 
-proc emit(self : JsonParser, obj : string) = 
+proc isAlphaExt(character : char) : bool =
 
-  if self.silent:
-    return
-  
-  if self.colorize : stdout.resetAttributes()
-  stdout.write(self.path)
-  stdout.write(" = ")
-  stdout.writeLine(obj) 
-  stdout.flushFile()
+  isAlphaNumeric(character) or character == '_'
 
-proc emit(self : JsonParser, obj : JsonObject) = 
-
-  if self.silent:
-    return
-  
-  stdout.write(self.path)
-  stdout.write(" = ")
-  
-  case obj.kind:
-  of Number:
-    if self.colorize : stdout.write(NUMBER_COLOR)
-    stdout.write(self.data[obj.startP..<obj.endP])
-    if self.colorize: stdout.write(COLOR_END)
-    stdout.writeLine(";")
-    stdout.flushFile()  
-  of Boolean, Null:
-    if self.colorize : stdout.write(BOOLEAN_NULL_COLOR)
-    stdout.write(self.data[obj.startP..<obj.endP])
-    if self.colorize: stdout.write(COLOR_END)
-    stdout.writeLine(";")
-    stdout.flushFile()
-  of String:
-    if self.colorize : stdout.write(STRING_COLOR)
-    stdout.write("\"")
-    stdout.write(self.data[obj.startP..<obj.endP])
-    stdout.write("\"")
-    if self.colorize: stdout.write(COLOR_END)
-    stdout.writeLine(";")
-    stdout.flushFile()
+proc sortKeys(self : JsonObject, data : string, ascending  : bool = true) =
+  case self.kind:
+  of Object:
+    self.itemPairs.sort do (x,y : tuple[key: JsonObject, value: JsonObject]) -> int:
+      result = cmp(data[x.key.startP..<x.key.endP], data[y.key.startP..<y.key.endP])
+    for obj in self.itemPairs:
+      obj.value.sortKeys(data, ascending)
+  of Array:
+    for obj in self.items:
+      obj.sortKeys(data, ascending)
   else:
     discard
+
+proc dumpGron(self : JsonObject, data : string,  path : string = "", colorize : bool = false) =
+  
+  case self.kind:
+  of String:
+    stdout.write(path)
+    stdout.write(" = ")
+    if colorize : stdout.write(STRING_COLOR)
+    stdout.write("\"")
+    stdout.write(data[self.startP..<self.endP])
+    stdout.write("\"")
+    if colorize: stdout.write(COLOR_END)
+    stdout.writeLine(";")
+    stdout.flushFile()
+  of Boolean, Null:
+    stdout.write(path)
+    stdout.write(" = ")
+    if colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    stdout.write(data[self.startP..<self.endP])
+    if colorize: stdout.write(COLOR_END)
+    stdout.writeLine(";")
+    stdout.flushFile()
+  of Number:
+    stdout.write(path)
+    stdout.write(" = ")
+    if colorize : stdout.write(NUMBER_COLOR)
+    stdout.write(data[self.startP..<self.endP])
+    if colorize: stdout.write(COLOR_END)
+    stdout.writeLine(";")
+    stdout.flushFile()  
+  of Object:
+    for obj in self.itemPairs:
+      var pathAppend = "."
+      let rawKey = data[obj.key.startP..<obj.key.endP]
+      if colorize : 
+        pathAppend &= KEY_COLOR
+        pathAppend &= rawKey
+        pathAppend &= COLOR_END
+      else:
+        pathAppend &= rawKey
+
+      for character in rawKey:
+        if not isAlphaExt(character):
+          if colorize : 
+            pathAppend = STYLED_LEFT_BRACKET
+            pathAppend &= STRING_COLOR
+            pathAppend &= "\""
+            pathAppend &= rawKey
+            pathAppend &= "\""
+            pathAppend &= COLOR_END
+            pathAppend &= STYLED_RIGHT_BRACKET
+          else:
+            pathAppend = "[\""
+            pathAppend &= rawKey
+            pathAppend &= "\"]"
+
+          break
+      var currentPath = path & pathAppend
+      obj.value.dumpGron(data = data, path = currentPath, colorize = colorize)
+  of Array:
+    var index = 0
+    for obj in self.items:
+      var currentPath = path
+      if colorize:
+        currentPath &= STYLED_LEFT_BRACKET
+        currentPath &= NUMBER_COLOR
+        currentPath &= $index
+        currentPath &= COLOR_END
+        currentPath &= STYLED_RIGHT_BRACKET
+      else:
+        currentPath &= "["
+        currentPath &= $index
+        currentPath &= "]"
+      obj.dumpGron(data = data, path = currentPath, colorize = colorize)
+      inc(index)
 
 proc error(self : JsonParser, msg : string, span : int = 5) = 
   
@@ -112,10 +166,6 @@ proc isWhitespace(character : char) : bool =
 
   character == ' ' or character == '\n' or character == '\t' or character == '\r'
 
-proc isAlphaExt(character : char) : bool =
-
-  isAlphaNumeric(character) or character == '_'
-
 proc isAtEnd(self : JsonParser) : bool =
   
   self.current == self.data.len
@@ -132,12 +182,6 @@ proc peek(self : JsonParser) : char =
     return '\0'
   self.data[self.current]
 
-proc peekNext(self : JsonParser) : char =
-  
-  if self.current == self.data.len-1:
-    return '\0'
-  self.data[self.current+1]
-  
 proc advance(self : JsonParser) : char =
   
   if self.isAtEnd():
@@ -201,40 +245,16 @@ proc parseString(self : JsonParser) : JsonObject =
 proc parseObject(self : JsonParser) : JsonObject =
 
   let startP = self.current 
-  var oldPath = self.path
+
+  var itemPairs = newSeq[(JsonObject, JsonObject)]()
   
   while not self.isAtEnd():
-    if isWhitespace(self.peek()):
-      discard self.advance()
-      continue
+
+    self.consumeWhitespace()
     
     discard self.consume('\"', "Expected string as key for object")
 
     let key =  self.parseString()
-    var pathAppend = "."
-    if self.colorize : 
-      pathAppend &= KEY_COLOR
-      pathAppend &= self.data[key.startP..<key.endP]
-      pathAppend &= COLOR_END
-    else:
-      pathAppend &= self.data[key.startP..<key.endP]
-    for character in self.data[key.startP..<key.endP]:
-      if not isAlphaExt(character):
-        if self.colorize : 
-          pathAppend = STYLED_LEFT_BRACKET
-          pathAppend &= STRING_COLOR
-          pathAppend &= "\""
-          pathAppend &= self.data[key.startP..<key.endP]
-          pathAppend &= "\""
-          pathAppend &= COLOR_END
-          pathAppend &= STYLED_RIGHT_BRACKET
-        else:
-          pathAppend = "[\""
-          pathAppend &= self.data[key.startP..<key.endP]
-          pathAppend &= "\"]"
-
-        break
-    self.path &= pathAppend
     
     self.consumeWhitespace()
 
@@ -242,69 +262,49 @@ proc parseObject(self : JsonParser) : JsonObject =
 
     let item = self.parseValue()
 
-    if not self.silent:
+    itemPairs.add((key, item))
 
-      case item.kind:
-      of Number, Boolean, Null, String:
-        self.emit(item)
-      else:
-        discard
-    
     self.consumeWhitespace()
 
     if self.peek() != ',':
       break
     discard self.advance()
-    self.path = oldPath
 
   self.consumeWhitespace()
 
   discard self.consume('}', "Expected ] at the end of an array ")
 
-  JsonObject(kind : Object, startP : startP, endP : self.current - 1)
+  if self.sort:
+    itemPairs.sort do (x,y : tuple[key: JsonObject, value: JsonObject]) -> int:
+      result = cmp(self.data[x.key.startP..<x.key.endP], self.data[y.key.startP..<y.key.endP])
+
+  JsonObject(kind : Object, startP : startP, endP : self.current - 1, itemPairs : itemPairs)
 
 proc parseArray(self : JsonParser) : JsonObject =
 
   let startP = self.current 
   var index = 0
-  var oldPath = self.path
+  var items = newSeq[JsonObject]()
   
   while not self.isAtEnd():
-    if isWhitespace(self.peek()):
-      discard self.advance()
-      continue
     
-    if self.colorize:
-      self.path &= STYLED_LEFT_BRACKET
-      self.path &= NUMBER_COLOR
-      self.path &= $index
-      self.path &= COLOR_END
-      self.path &= STYLED_RIGHT_BRACKET
-    else:
-      self.path &= "["
-      self.path &= $index
-      self.path &= "]"
+    self.consumeWhitespace()
 
     let item = self.parseValue()
-    if not self.silent:
-      case item.kind:
-      of Number, Boolean, Null, String:
-        self.emit(item)
-      else:
-        discard
+
+    items.add(item)
 
     if self.peek() != ',':
       break
     discard self.advance()
     inc(index)
-    self.path = oldPath
 
   while isWhitespace(self.peek()):
     discard self.advance()
 
   discard self.consume(']', "Expected ] at the end of an array ")
 
-  JsonObject(kind : Array, startP : startP, endP : self.current - 1)
+  JsonObject(kind : Array, startP : startP, endP : self.current - 1, items : items)
 
 proc parseValue(self : JsonParser) : JsonObject =
   while not self.isAtEnd():
@@ -338,45 +338,9 @@ proc parse*(self : JsonParser, data : string, silent : bool = false, sort : bool
   self.colorize = colorize
   self.sort = sort
 
-  if self.colorize:
-    self.path = KEY_COLOR
-    self.path &= "json"
-    self.path &= COLOR_END
-  else:
-    self.path &= "json"
-  
-  self.consumeWhitespace()  
+  let jsonObject = self.parseValue()
 
-  let curChar = self.advance()
-  case curChar:
-  of '{':
-      if self.colorize:
-        var obj = STYLED_LEFT_CURLY_BRACE
-        obj &= STYLED_RIGHT_CURLY_BRACE
-        self.emit(obj)
-      else:
-        self.emit("{}")
-      discard  self.parseObject()
-  of '[':
-      if self.colorize:
-        var obj = STYLED_LEFT_BRACKET
-        obj &= STYLED_RIGHT_BRACKET
-        self.emit(obj)
-      else:
-        self.emit("[]")
-      discard self.parseArray()
-  of '\'','\"':
-      self.emit(self.parseString())
-  of 'n':
-      self.emit(self.parseNull())
-  of 't','f':
-      self.emit(self.parseBoolean())
-  else:
-
-    if isNumber(curChar) or curChar == '-':
-      self.emit(self.parseNumber())
-
-    self.error(fmt("Cannot parse character '{curChar}'"))  
+  jsonObject.dumpGron(data, path = "json", colorize = self.colorize)
 
 
 

@@ -21,28 +21,18 @@ import argparse
 
 var p = newParser:
   help("Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable")
-  flag( "--version", help="Print version information")
+  flag( "--version", help="Print version information", shortcircuit=true)
   flag( "--validate", help="Validate json input")
   flag( "--sort", help="sort keys (slower)")
   flag("-c", "--colorize", help="Colorize output (default on tty)")
   option("-u", "--ungron", help="Reverse the operation (turn assignments back into JSON)")
   option("-v", "--values", help="Print just the values of provided assignments")
-  arg("input", default=some(""), help="Path to json file")
+  arg("input", help="Path to json file")
 
 proc runCli*(params : seq[string]) = 
 
   try:
     let opts = p.parse(params)
-
-    if opts.version:
-      echo "v0.0.1"
-      quit(0)
-
-    if opts.input == "":
-      echo "Missing argument(s): input"
-      echo p.help
-      quit(1)
-
 
     let f =  open(opts.input)
     defer: f.close()
