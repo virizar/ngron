@@ -22,11 +22,11 @@ import argparse
 var p = newParser:
   help("Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable")
   flag( "--version", help="Print version information", shortcircuit=true)
-  flag( "--validate", help="Validate json input")
+  flag( "--validate", help="Validate json input. Will only print errors and warnings.")
   flag( "--sort", help="sort keys (slower)")
-  flag("-c", "--colorize", help="Colorize output (default on tty)")
+  flag("-v", "--values", help="Print just the values of provided assignments")
+  flag("-c", "--colorize", help="Colorize output")
   option("-u", "--ungron", help="Reverse the operation (turn assignments back into JSON)")
-  option("-v", "--values", help="Print just the values of provided assignments")
   arg("input", help="Path to json file")
 
 proc runCli*(params : seq[string]) = 
@@ -38,10 +38,11 @@ proc runCli*(params : seq[string]) =
     defer: f.close()
     
     if opts.validate:
-      stringToGron(f.readAll(), silent = true, sort = opts.sort, colorize = opts.colorize)
+      stringToGron(f.readAll(), silent = true, false, colorize = false)
       echo "FILE OK"
-    else:
-      stringToGron(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize)
+      quit(0)
+    
+    stringToGron(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize,  values = opts.values)
 
   except ShortCircuit as err:
     if err.flag == "argparse_help":

@@ -25,10 +25,6 @@ type
     else:
       discard
 
-proc isAlphaExt(character : char) : bool =
-
-  isAlphaNumeric(character) or character == '_'
-
 proc sortKeys(self : JsonPointerTree, data : string, ascending  : bool = true) =
   case self.kind:
   of Object:
@@ -154,7 +150,7 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
         pathAppend &= rawKey
 
       for character in rawKey:
-        if not isAlphaExt(character):
+        if not (isAlphaNumeric(character) or character == '_'):
           if colorize : 
             pathAppend = STYLED_LEFT_BRACKET
             pathAppend &= STRING_COLOR
@@ -187,3 +183,34 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
         currentPath &= "]"
       obj.dumpGron(data = data, path = currentPath, colorize = colorize)
       inc(index)
+
+proc dumpValues(self : JsonPointerTree, data : string, colorize : bool = false) =
+
+  case self.kind:
+  of String:
+    if colorize : stdout.write(STRING_COLOR)
+    stdout.write("\"")
+    stdout.write(data[self.startP..<self.endP])
+    stdout.write("\"")
+    if colorize: stdout.write(COLOR_END)
+    stdout.write("\n")
+    stdout.flushFile()
+  of Boolean, Null:
+    if colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    stdout.write(data[self.startP..<self.endP])
+    if colorize: stdout.write(COLOR_END)
+    stdout.write("\n")
+    stdout.flushFile()
+  of Number:
+    if colorize : stdout.write(NUMBER_COLOR)
+    stdout.write(data[self.startP..<self.endP])
+    if colorize: stdout.write(COLOR_END)
+    stdout.write("\n")
+    stdout.flushFile()  
+  of Object:
+    for obj in self.itemPairs:
+      obj.value.dumpValues(data = data, colorize = colorize)
+  of Array:
+    for obj in self.items:
+      obj.dumpValues(data = data, colorize = colorize)
+

@@ -152,13 +152,18 @@ proc parseValue(self : JsonParser) : JsonPointerTree =
 
       self.error(fmt("Cannot parse character '{curChar}'"))  
 
-proc stringToGron*(data : string, silent : bool = false, sort : bool = false, colorize : bool = false) =
+proc stringToGron*(data : string, silent : bool = false, sort : bool = false, colorize : bool = false, values: bool = false) =
 
   var parser = newJsonParser(data, silent, colorize, sort)
 
   let jsonPointerTree = parser.parseValue()
 
-  jsonPointerTree.dumpGron(data, path = "json", colorize = colorize)
+  if values:
+    jsonPointerTree.dumpValues(data, colorize = colorize)
+    return
+
+  if not silent:
+    jsonPointerTree.dumpGron(data, path = "json", colorize = colorize)
 
 
 
