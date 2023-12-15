@@ -15,8 +15,7 @@ type
     Null
 
   JsonPointerTree* = ref object
-    startP* : int
-    endP*: int
+    value* : string
     case kind*: JsonPointerTreeKind  
     of Array:
       items*: seq[JsonPointerTree]
@@ -25,37 +24,37 @@ type
     else:
       discard
 
-proc sortKeys(self : JsonPointerTree, data : string, ascending  : bool = true) =
+proc sortKeys(self : JsonPointerTree,ascending  : bool = true) =
   case self.kind:
   of Object:
     self.itemPairs.sort do (x,y : tuple[key: JsonPointerTree, value: JsonPointerTree]) -> int:
-      result = cmp(data[x.key.startP..<x.key.endP], data[y.key.startP..<y.key.endP])
+      result = cmp(x.value, y.value)
     for obj in self.itemPairs:
-      obj.value.sortKeys(data, ascending)
+      obj.value.sortKeys(ascending)
   of Array:
     for obj in self.items:
-      obj.sortKeys(data, ascending)
+      obj.sortKeys(ascending)
   else:
     discard
 
-proc dumpJson(self : JsonPointerTree, data : string, level : int = 0, indent : int = 2,  colorize : bool = false) =
+proc dumpJson(self : JsonPointerTree, level : int = 0, indent : int = 2,  colorize : bool = false) =
 
   case self.kind:
   of String:
     if colorize : stdout.write(STRING_COLOR)
     stdout.write("\"")
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     stdout.write("\"")
     if colorize: stdout.write(COLOR_END)
     stdout.flushFile()
   of Boolean, Null:
     if colorize : stdout.write(BOOLEAN_NULL_COLOR)
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.flushFile()
   of Number:
     if colorize : stdout.write(NUMBER_COLOR)
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.flushFile()  
   of Object:
@@ -65,7 +64,7 @@ proc dumpJson(self : JsonPointerTree, data : string, level : int = 0, indent : i
     else:
       stdout.write("{\n")
     for i, obj in enumerate(self.itemPairs):
-      let rawKey = data[obj.key.startP..<obj.key.endP]
+      let rawKey = obj.value[]
       stdout.write(' '.repeat(level + indent))
       if colorize:
         stdout.write(KEY_COLOR)
@@ -78,7 +77,7 @@ proc dumpJson(self : JsonPointerTree, data : string, level : int = 0, indent : i
         stdout.write(rawKey)
         stdout.write("\"")
       stdout.write(": ")
-      obj.value.dumpJson(data = data, level = level + indent,  colorize = colorize)
+      obj.value.dumpJson(level = level + indent,  colorize = colorize)
       if i != self.itemPairs.len - 1:
         stdout.writeLine(",")
       else:
@@ -97,7 +96,7 @@ proc dumpJson(self : JsonPointerTree, data : string, level : int = 0, indent : i
       stdout.write("[\n")
     for i, obj in enumerate(self.items):
       stdout.write(' '.repeat(level + indent))
-      obj.dumpJson(data = data, level = level + indent,  colorize = colorize)
+      obj.dumpJson(level = level + indent,  colorize = colorize)
       if i != self.items.len - 1:
         stdout.writeLine(",")
       else:
@@ -109,7 +108,7 @@ proc dumpJson(self : JsonPointerTree, data : string, level : int = 0, indent : i
       stdout.write("]")
     stdout.flushFile() 
     
-proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colorize : bool = false) =
+proc dumpGron(self : JsonPointerTree, path : string = "", colorize : bool = false) =
   
   case self.kind:
   of String:
@@ -117,7 +116,7 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
     stdout.write(" = ")
     if colorize : stdout.write(STRING_COLOR)
     stdout.write("\"")
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     stdout.write("\"")
     if colorize: stdout.write(COLOR_END)
     stdout.writeLine(";")
@@ -126,7 +125,7 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
     stdout.write(path)
     stdout.write(" = ")
     if colorize : stdout.write(BOOLEAN_NULL_COLOR)
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.writeLine(";")
     stdout.flushFile()
@@ -134,7 +133,7 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
     stdout.write(path)
     stdout.write(" = ")
     if colorize : stdout.write(NUMBER_COLOR)
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.writeLine(";")
     stdout.flushFile()  
@@ -158,7 +157,7 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
 
     for obj in self.itemPairs:
       var pathAppend = "."
-      let rawKey = data[obj.key.startP..<obj.key.endP]
+      let rawKey = obj.key.value
       if colorize : 
         pathAppend &= KEY_COLOR
         pathAppend &= rawKey
@@ -190,7 +189,7 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
         currentPath &= COLOR_END
         currentPath &= pathAppend
 
-      obj.value.dumpGron(data = data, path = currentPath, colorize = colorize)
+      obj.value.dumpGron(path = currentPath, colorize = colorize)
   of Array:
 
     if colorize : 
@@ -226,36 +225,36 @@ proc dumpGron(self : JsonPointerTree, data : string,  path : string = "", colori
         currentPath &= "["
         currentPath &= $index
         currentPath &= "]"
-      obj.dumpGron(data = data, path = currentPath, colorize = colorize)
+      obj.dumpGron(path = currentPath, colorize = colorize)
       inc(index)
 
-proc dumpValues(self : JsonPointerTree, data : string, colorize : bool = false) =
+proc dumpValues(self : JsonPointerTree, colorize : bool = false) =
 
   case self.kind:
   of String:
     if colorize : stdout.write(STRING_COLOR)
     stdout.write("\"")
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     stdout.write("\"")
     if colorize: stdout.write(COLOR_END)
     stdout.write("\n")
     stdout.flushFile()
   of Boolean, Null:
     if colorize : stdout.write(BOOLEAN_NULL_COLOR)
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.write("\n")
     stdout.flushFile()
   of Number:
     if colorize : stdout.write(NUMBER_COLOR)
-    stdout.write(data[self.startP..<self.endP])
+    stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.write("\n")
     stdout.flushFile()  
   of Object:
     for obj in self.itemPairs:
-      obj.value.dumpValues(data = data, colorize = colorize)
+      obj.value.dumpValues(colorize = colorize)
   of Array:
     for obj in self.items:
-      obj.dumpValues(data = data, colorize = colorize)
+      obj.dumpValues(colorize = colorize)
 
