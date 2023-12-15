@@ -43,7 +43,7 @@ proc isWhitespace(character : char) : bool =
 
 proc isAtEnd(self : BaseParser) : bool =
   
-  self.current == self.data.len
+  self.current >= self.data.len
 
 proc peekPrevious(self : BaseParser) : char =
   
