@@ -73,6 +73,10 @@ proc parseObject(self : JsonParser) : JsonObject =
   while not self.isAtEnd():
 
     self.consumeWhitespace()
+
+    if self.peek() == '}':
+      discard self.advance()
+      return JsonObject(kind : Object)
     
     discard self.consume('\"', "Expected string as key for object")
 
@@ -110,6 +114,10 @@ proc parseArray(self : JsonParser) : JsonObject =
   while not self.isAtEnd():
     
     self.consumeWhitespace()
+
+    if self.peek() == ']':
+      discard self.advance()
+      return JsonObject(kind : Array)
 
     let item = self.parseValue()
 
