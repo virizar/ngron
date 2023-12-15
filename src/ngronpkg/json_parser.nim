@@ -12,7 +12,7 @@ type
     sort : bool = false
   
 # forward declarations
-proc parseValue(self : JsonParser) : JsonPointerTree 
+proc parseValue(self : JsonParser) : JsonObject 
 
 proc newJsonParser(data : string, silent :bool, colorize : bool , sort: bool) : JsonParser = 
   new(result)
@@ -22,7 +22,7 @@ proc newJsonParser(data : string, silent :bool, colorize : bool , sort: bool) : 
   result.colorize = colorize
   result.sort = sort
 
-proc parseBoolean(self : JsonParser) : JsonPointerTree =
+proc parseBoolean(self : JsonParser) : JsonObject =
 
   let startP = self.current - 1 
 
@@ -36,26 +36,26 @@ proc parseBoolean(self : JsonParser) : JsonPointerTree =
 
   
 
-  JsonPointerTree(kind : Boolean, value : self.data[startP..<self.current])
+  JsonObject(kind : Boolean, value : self.data[startP..<self.current])
 
-proc parseNull(self : JsonParser) : JsonPointerTree =
+proc parseNull(self : JsonParser) : JsonObject =
 
   let startP = self.current - 1 
   for expected in "ull":
     discard self.consume(expected, fmt"Expected '{expected}' in 'null'")
 
-  JsonPointerTree(kind : Null, value : self.data[startP..<self.current])
+  JsonObject(kind : Null, value : self.data[startP..<self.current])
 
-proc parseNumber(self : JsonParser) : JsonPointerTree =
+proc parseNumber(self : JsonParser) : JsonObject =
 
   let startP = self.current - 1 
   
   while isNumber(self.peek()) or self.peek() == '.':
     discard self.advance()
 
-  JsonPointerTree(kind : Number, value : self.data[startP..<self.current])
+  JsonObject(kind : Number, value : self.data[startP..<self.current])
 
-proc parseString(self : JsonParser) : JsonPointerTree =
+proc parseString(self : JsonParser) : JsonObject =
 
   let startP = self.current 
   
@@ -64,11 +64,11 @@ proc parseString(self : JsonParser) : JsonPointerTree =
 
   discard self.consume('\"', "Expected \" at the end of a string ")
 
-  JsonPointerTree(kind : String, value : self.data[startP..<self.current-1])
+  JsonObject(kind : String, value : self.data[startP..<self.current-1])
 
-proc parseObject(self : JsonParser) : JsonPointerTree =
+proc parseObject(self : JsonParser) : JsonObject =
 
-  var itemPairs = newSeq[(JsonPointerTree, JsonPointerTree)]()
+  var itemPairs = newSeq[(JsonObject, JsonObject)]()
   
   while not self.isAtEnd():
 
@@ -97,15 +97,15 @@ proc parseObject(self : JsonParser) : JsonPointerTree =
   discard self.consume('}', "Expected ] at the end of an array ")
 
   if self.sort:
-    itemPairs.sort do (x,y : tuple[key: JsonPointerTree, value: JsonPointerTree]) -> int:
+    itemPairs.sort do (x,y : tuple[key: JsonObject, value: JsonObject]) -> int:
       result = cmp(x.key.value, y.key.value)
 
-  JsonPointerTree(kind : Object, itemPairs : itemPairs)
+  JsonObject(kind : Object, itemPairs : itemPairs)
 
-proc parseArray(self : JsonParser) : JsonPointerTree =
+proc parseArray(self : JsonParser) : JsonObject =
 
   var index = 0
-  var items = newSeq[JsonPointerTree]()
+  var items = newSeq[JsonObject]()
   
   while not self.isAtEnd():
     
@@ -125,9 +125,9 @@ proc parseArray(self : JsonParser) : JsonPointerTree =
 
   discard self.consume(']', "Expected ] at the end of an array ")
 
-  JsonPointerTree(kind : Array, items : items)
+  JsonObject(kind : Array, items : items)
 
-proc parseValue(self : JsonParser) : JsonPointerTree =
+proc parseValue(self : JsonParser) : JsonObject =
   while not self.isAtEnd():
     let curChar = self.advance()
     case curChar:

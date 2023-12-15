@@ -6,7 +6,7 @@ include styles
 
 type
 
-  JsonPointerTreeKind = enum
+  JsonObjectKind = enum
     String,
     Array,
     Object,
@@ -14,20 +14,20 @@ type
     Boolean,
     Null
 
-  JsonPointerTree* = ref object
+  JsonObject* = ref object
     value* : string
-    case kind*: JsonPointerTreeKind  
+    case kind*: JsonObjectKind  
     of Array:
-      items*: seq[JsonPointerTree]
+      items*: seq[JsonObject]
     of Object:
-      itemPairs*: seq[tuple[key: JsonPointerTree, value: JsonPointerTree]]
+      itemPairs*: seq[tuple[key: JsonObject, value: JsonObject]]
     else:
       discard
 
-proc sortKeys(self : JsonPointerTree,ascending  : bool = true) =
+proc sortKeys(self : JsonObject,ascending  : bool = true) =
   case self.kind:
   of Object:
-    self.itemPairs.sort do (x,y : tuple[key: JsonPointerTree, value: JsonPointerTree]) -> int:
+    self.itemPairs.sort do (x,y : tuple[key: JsonObject, value: JsonObject]) -> int:
       result = cmp(x.value, y.value)
     for obj in self.itemPairs:
       obj.value.sortKeys(ascending)
@@ -37,7 +37,7 @@ proc sortKeys(self : JsonPointerTree,ascending  : bool = true) =
   else:
     discard
 
-proc dumpJson(self : JsonPointerTree, level : int = 0, indent : int = 2,  colorize : bool = false) =
+proc dumpJson(self : JsonObject, level : int = 0, indent : int = 2,  colorize : bool = false) =
 
   case self.kind:
   of String:
@@ -108,7 +108,7 @@ proc dumpJson(self : JsonPointerTree, level : int = 0, indent : int = 2,  colori
       stdout.write("]")
     stdout.flushFile() 
     
-proc dumpGron(self : JsonPointerTree, path : string = "", colorize : bool = false) =
+proc dumpGron(self : JsonObject, path : string = "", colorize : bool = false) =
   
   case self.kind:
   of String:
@@ -228,7 +228,7 @@ proc dumpGron(self : JsonPointerTree, path : string = "", colorize : bool = fals
       obj.dumpGron(path = currentPath, colorize = colorize)
       inc(index)
 
-proc dumpValues(self : JsonPointerTree, colorize : bool = false) =
+proc dumpValues(self : JsonObject, colorize : bool = false) =
 
   case self.kind:
   of String:
