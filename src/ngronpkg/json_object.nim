@@ -24,6 +24,15 @@ type
     else:
       discard
 
+proc `$`(self : JsonObject) : string = 
+  
+  result &= "JsonObject("
+  result &= $self.kind
+  result &= ", '"
+  result &= self.value
+  result &= "')"
+  
+
 proc sortKeys(self : JsonObject,ascending  : bool = true) =
   case self.kind:
   of Object:
