@@ -2,6 +2,7 @@ import std/strformat
 import std/strutils
 import std/enumerate
 import std/algorithm
+import std/tables
 include json_object
 include base_parser
 
@@ -68,7 +69,7 @@ proc parseString(self : JsonParser) : JsonObject =
 
 proc parseObject(self : JsonParser) : JsonObject =
 
-  var itemPairs = newSeq[(JsonObject, JsonObject)]()
+  var itemPairs = initOrderedTable[string, JsonObject]()
   
   while not self.isAtEnd():
 
@@ -88,7 +89,7 @@ proc parseObject(self : JsonParser) : JsonObject =
 
     let item = self.parseValue()
 
-    itemPairs.add((key, item))
+    itemPairs[key.value] =  item
 
     self.consumeWhitespace()
 
@@ -101,10 +102,9 @@ proc parseObject(self : JsonParser) : JsonObject =
   discard self.consume('}', "Expected ] at the end of an array ")
 
   if self.sort:
-    itemPairs.sort do (x,y : tuple[key: JsonObject, value: JsonObject]) -> int:
-      result = cmp(x.key.value, y.key.value)
+    itemPairs.sort(system.cmp)
 
-  JsonObject(kind : Object, itemPairs : itemPairs)
+  JsonObject(kind : Object, pairs : itemPairs)
 
 proc parseArray(self : JsonParser) : JsonObject =
 

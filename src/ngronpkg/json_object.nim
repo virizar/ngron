@@ -1,7 +1,6 @@
-import std/strformat
 import std/strutils
 import std/enumerate
-import std/algorithm
+import std/tables
 include styles
 
 type
@@ -20,7 +19,7 @@ type
     of Array:
       items*: seq[JsonObject]
     of Object:
-      itemPairs*: seq[tuple[key: JsonObject, value: JsonObject]]
+      pairs*: OrderedTable[string, JsonObject]
     else:
       discard
 
@@ -31,20 +30,6 @@ proc `$`(self : JsonObject) : string =
   result &= ", '"
   result &= self.value
   result &= "')"
-  
-
-proc sortKeys(self : JsonObject,ascending  : bool = true) =
-  case self.kind:
-  of Object:
-    self.itemPairs.sort do (x,y : tuple[key: JsonObject, value: JsonObject]) -> int:
-      result = cmp(x.value, y.value)
-    for obj in self.itemPairs:
-      obj.value.sortKeys(ascending)
-  of Array:
-    for obj in self.items:
-      obj.sortKeys(ascending)
-  else:
-    discard
 
 proc dumpJson(self : JsonObject, level : int = 0, indent : int = 2,  colorize : bool = false) =
 
@@ -72,25 +57,26 @@ proc dumpJson(self : JsonObject, level : int = 0, indent : int = 2,  colorize : 
       stdout.write("\n")
     else:
       stdout.write("{\n")
-    for i, obj in enumerate(self.itemPairs):
-      let rawKey = obj.value[]
+    var i = 0
+    for key, value in self.pairs.pairs():
       stdout.write(' '.repeat(level + indent))
       if colorize:
         stdout.write(KEY_COLOR)
         stdout.write("\"")
-        stdout.write(rawKey)
+        stdout.write(key)
         stdout.write("\"")
         stdout.write(COLOR_END)
       else:
         stdout.write("\"")
-        stdout.write(rawKey)
+        stdout.write(key)
         stdout.write("\"")
       stdout.write(": ")
-      obj.value.dumpJson(level = level + indent,  colorize = colorize)
-      if i != self.itemPairs.len - 1:
+      value.dumpJson(level = level + indent,  colorize = colorize)
+      if i != self.pairs.len - 1:
         stdout.writeLine(",")
       else:
         stdout.write("\n")
+      inc(i)
     stdout.write(' '.repeat(level))
     if colorize:
       stdout.write(STYLED_RIGHT_CURLY_BRACE)
@@ -164,29 +150,28 @@ proc dumpGron(self : JsonObject, path : string = "", colorize : bool = false) =
     
     stdout.write(";\n")
 
-    for obj in self.itemPairs:
+    for key, value in self.pairs.pairs():
       var pathAppend = "."
-      let rawKey = obj.key.value
       if colorize : 
         pathAppend &= KEY_COLOR
-        pathAppend &= rawKey
+        pathAppend &= key
         pathAppend &= COLOR_END
       else:
-        pathAppend &= rawKey
+        pathAppend &= key
 
-      for character in rawKey:
+      for character in key:
         if not (isAlphaNumeric(character) or character == '_'):
           if colorize : 
             pathAppend = STYLED_LEFT_BRACKET
             pathAppend &= STRING_COLOR
             pathAppend &= "\""
-            pathAppend &= rawKey
+            pathAppend &= key
             pathAppend &= "\""
             pathAppend &= COLOR_END
             pathAppend &= STYLED_RIGHT_BRACKET
           else:
             pathAppend = "[\""
-            pathAppend &= rawKey
+            pathAppend &= key
             pathAppend &= "\"]"
 
           break
@@ -198,7 +183,7 @@ proc dumpGron(self : JsonObject, path : string = "", colorize : bool = false) =
         currentPath &= COLOR_END
         currentPath &= pathAppend
 
-      obj.value.dumpGron(path = currentPath, colorize = colorize)
+      value.dumpGron(path = currentPath, colorize = colorize)
   of Array:
 
     if colorize : 
@@ -261,8 +246,8 @@ proc dumpValues(self : JsonObject, colorize : bool = false) =
     stdout.write("\n")
     stdout.flushFile()  
   of Object:
-    for obj in self.itemPairs:
-      obj.value.dumpValues(colorize = colorize)
+    for key,value in self.pairs.pairs():
+      value.dumpValues(colorize = colorize)
   of Array:
     for obj in self.items:
       obj.dumpValues(colorize = colorize)
