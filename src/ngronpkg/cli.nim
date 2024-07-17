@@ -1,6 +1,7 @@
 import std/cmdline
 import std/options
-import json_parser
+# import json_parser
+import gron_parser
 import argparse
 
 # Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable
@@ -12,7 +13,6 @@ import argparse
 #   -u, --ungron     Reverse the operation (turn assignments back into JSON)
 #   -v, --values     Print just the values of provided assignments
 #   -c, --colorize   Colorize output (default on tty)
-#   -m, --monochrome Monochrome (don't colorize output)
 #   -s, --stream     Treat each line of input as a separate JSON object
 #   -k, --insecure   Disable certificate validation
 #   -j, --json       Represent gron data as JSON stream
@@ -26,7 +26,8 @@ var p = newParser:
   flag( "--sort", help="sort keys (slower)")
   flag("-v", "--values", help="Print just the values of provided assignments")
   flag("-c", "--colorize", help="Colorize output")
-  option("-u", "--ungron", help="Reverse the operation (turn assignments back into JSON)")
+  flag("-j", "--json-stream", help="Represent gron data as JSON stream")
+  flag("-u", "--ungron", help="Reverse the operation (turn assignments back into JSON)")
   arg("input", help="Path to json file")
 
 proc runCli*(params : seq[string]) = 
@@ -40,6 +41,10 @@ proc runCli*(params : seq[string]) =
     if opts.validate:
       stringToGron(f.readAll(), silent = true, false, colorize = false)
       echo "FILE OK"
+      quit(0)
+
+    if opts.ungron:
+      gronStringToJson(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize)
       quit(0)
     
     stringToGron(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize,  values = opts.values)
