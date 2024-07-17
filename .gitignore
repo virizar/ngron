@@ -7,3 +7,4 @@ tests/*
 !tests/*.nim
 !tests/*.nims
 !tests/resources
+!tests/resources/gron

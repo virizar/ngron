@@ -1,17 +1,19 @@
 import std/strformat
 import std/strutils
+import token
 
 type
   BaseParser* = ref object of RootObj
     current : int 
-    data: string
+    tokens: seq[Token]
+    data : string
 
   ParserException* = ref Exception
 
 proc error(self : BaseParser, msg : string, span : int = 5) = 
   
   writeLine(stderr, fmt"[ParserError]: {msg}")
-  writeLine(stderr, fmt"On character {self.current}:".indent(1))
+  writeLine(stderr, fmt"On character {self.tokens[self.current]}:".indent(1))
   
   var initPointer = self.current - span
   var endPointer = self.current + span
@@ -33,47 +35,35 @@ proc error(self : BaseParser, msg : string, span : int = 5) =
   e.msg  = msg
   raise e
 
-proc isNumber(character : char) : bool =
-
-  character >= '0' and character <= '9'
-
-proc isWhitespace(character : char) : bool =
-
-  character == ' ' or character == '\n' or character == '\t' or character == '\r'
 
 proc isAtEnd(self : BaseParser) : bool =
   
-  self.current >= self.data.len
+  self.tokens[self.current].kind == Eof
 
-proc peekPrevious(self : BaseParser) : char =
+proc peekPrevious(self : BaseParser) : Token =
   
   if self.current == 0:
-    return '\0'
-  self.data[self.current - 1]
+    return self.tokens[self.current]
+  self.tokens[self.current - 1]
 
-proc peek(self : BaseParser) : char =
+proc peek(self : BaseParser) : Token =
+  if self.isAtEnd():
+    return Token(kind: Eof, lexeme: "")
+  self.tokens[self.current]
+
+proc advance(self : BaseParser) : Token =
   
   if self.isAtEnd():
-    return '\0'
-  self.data[self.current]
-
-proc advance(self : BaseParser) : char =
-  
-  if self.isAtEnd():
-    return '\0'
-  result = self.data[self.current]
+    return Token(kind: Eof, lexeme: "")
+  result = self.tokens[self.current]
   self.current += 1
 
-proc consume(self : BaseParser, character : char, errorMessage : string) : char =
+proc consume(self : BaseParser, expected : TokenKind, errorMessage : string) : Token =
   
-  if self.data[self.current] == character:
+  if self.peek().kind == expected:
     return self.advance()
   self.error(errorMessage)
 
-proc consumeWhitespace(self : BaseParser) =
-
-  while not self.isAtEnd() and isWhitespace(self.peek()):
-    discard self.advance()
   
 
 

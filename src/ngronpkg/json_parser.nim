@@ -5,6 +5,7 @@ import std/algorithm
 import std/tables
 include json_object
 include base_parser
+include tokenizer
 
 type
   JsonParser* = ref object of BaseParser
@@ -15,91 +16,34 @@ type
 # forward declarations
 proc parseValue(self : JsonParser) : JsonObject 
 
-proc newJsonParser(data : string, silent :bool, colorize : bool , sort: bool) : JsonParser = 
+proc newJsonParser(data : string, tokens : seq[Token],  silent :bool, colorize : bool , sort: bool) : JsonParser = 
   new(result)
   result.current = 0
   result.data = data
+  result.tokens = tokens
   result.silent = silent
   result.colorize = colorize
   result.sort = sort
 
-proc parseBoolean(self : JsonParser) : JsonObject =
-
-  let startP = self.current - 1 
-
-  if self.peekPrevious() == 't':
-    for expected in "rue":
-      discard self.consume(expected, fmt"Expected '{expected}' in boolean 'true'")
-  
-  else:
-    for expected in "alse":
-      discard self.consume(expected, fmt"Expected '{expected}' in boolean 'false'")
-
-  
-
-  JsonObject(kind : Boolean, value : self.data[startP..<self.current])
-
-proc parseNull(self : JsonParser) : JsonObject =
-
-  let startP = self.current - 1 
-  for expected in "ull":
-    discard self.consume(expected, fmt"Expected '{expected}' in 'null'")
-
-  JsonObject(kind : Null, value : self.data[startP..<self.current])
-
-proc parseNumber(self : JsonParser) : JsonObject =
-
-  let startP = self.current - 1 
-  
-  while isNumber(self.peek()) or self.peek() == '.':
-    discard self.advance()
-
-  JsonObject(kind : Number, value : self.data[startP..<self.current])
-
-proc parseString(self : JsonParser) : JsonObject =
-
-  let startP = self.current 
-  
-  while self.peek() != '\"':
-    discard self.advance()
-
-  discard self.consume('\"', "Expected \" at the end of a string ")
-
-  JsonObject(kind : String, value : self.data[startP..<self.current-1])
 
 proc parseObject(self : JsonParser) : JsonObject =
 
   var itemPairs = initOrderedTable[string, JsonObject]()
   
-  while not self.isAtEnd():
-
-    self.consumeWhitespace()
-
-    if self.peek() == '}':
-      discard self.advance()
-      return JsonObject(kind : Object)
+  while not self.isAtEnd() and self.peek().kind != RightBrace:
     
-    discard self.consume('\"', "Expected string as key for object")
+    let key =  self.consume(String, "Expected string as key for object")
 
-    let key =  self.parseString()
-    
-    self.consumeWhitespace()
+    discard self.consume(Colon, "Expected ':' after object key")
 
-    discard self.consume(':', "Expected ':' after object key")
+    itemPairs[key.lexeme] =  self.parseValue()
 
-    let item = self.parseValue()
-
-    itemPairs[key.value] =  item
-
-    self.consumeWhitespace()
-
-    if self.peek() != ',':
+    if self.peek().kind != Comma:
       break
+
     discard self.advance()
 
-  self.consumeWhitespace()
-
-  discard self.consume('}', "Expected ] at the end of an array ")
+  discard self.consume(RightBrace, "Expected ] at the end of an array ")
 
   if self.sort:
     itemPairs.sort(system.cmp)
@@ -111,57 +55,44 @@ proc parseArray(self : JsonParser) : JsonObject =
   var index = 0
   var items = newSeq[JsonObject]()
   
-  while not self.isAtEnd():
-    
-    self.consumeWhitespace()
+  while not self.isAtEnd() and  self.peek().kind != RightBracket:
 
-    if self.peek() == ']':
-      discard self.advance()
-      return JsonObject(kind : Array)
-
-    let item = self.parseValue()
-
-    items.add(item)
-
-    if self.peek() != ',':
+    items.add(self.parseValue())
+    if self.peek().kind != Comma:
       break
     discard self.advance()
     inc(index)
 
-  while isWhitespace(self.peek()):
-    discard self.advance()
-
-  discard self.consume(']', "Expected ] at the end of an array ")
+  discard self.consume(RightBracket, "Expected ] at the end of an array ")
 
   JsonObject(kind : Array, items : items)
 
 proc parseValue(self : JsonParser) : JsonObject =
   while not self.isAtEnd():
-    let curChar = self.advance()
-    case curChar:
-    of '{':
+    let token = self.advance()
+    case token.kind:
+    of LeftBrace:
       return  self.parseObject()
-    of '[':
+    of LeftBracket:
       return self.parseArray()
-    of '\'','\"':
-      return self.parseString()
-    of 'n':
-      return self.parseNull()
-    of 't','f':
-      return self.parseBoolean()
+    of String:
+      return JsonObject(kind : String, value : token.lexeme)
+    of Number:
+      return JsonObject(kind : Number, value : token.lexeme)
+    of Boolean:
+      return JsonObject(kind : Boolean, value : token.lexeme)
+    of Null:
+      return JsonObject(kind : Null, value : token.lexeme)
     else:
-      
-      if isWhitespace(curChar):
-        continue
-
-      if isNumber(curChar) or curChar == '-':
-        return self.parseNumber()
-
-      self.error(fmt("Cannot parse character '{curChar}'"))  
+      self.error(fmt("Cannot parse Token '{token}'"))  
 
 proc stringToGron*(data : string, silent : bool = false, sort : bool = false, colorize : bool = false, values: bool = false) =
 
-  var parser = newJsonParser(data, silent, colorize, sort)
+  var tokenizer = newTokenizer(data)
+
+  var tokens = tokenizer.tokenize()
+
+  var parser = newJsonParser(data, tokens, silent, colorize, sort)
 
   let jsonPointerTree = parser.parseValue()
 

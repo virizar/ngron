@@ -14,16 +14,19 @@ type
     Number, 
     Boolean, 
     Null,
-    Identifier
+    Identifier,
+    Eof
 
   Token* = ref object
     kind* : TokenKind
     lexeme* : string
+    start* : int
 
 proc newToken*(kind : TokenKind, lexeme : string) : Token = 
   new(result)
   result.kind = kind
   result.lexeme = lexeme
+  result.start = 0
 
 proc `$`*(self : Token) : string = 
   result &= "Token(" 
