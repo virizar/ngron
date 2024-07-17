@@ -28,7 +28,7 @@ proc newJsonParser(data : string, tokens : seq[Token],  silent :bool, colorize :
 
 proc parseObject(self : JsonParser) : JsonObject =
 
-  var itemPairs = initOrderedTable[string, JsonObject]()
+  var itemPairs = newOrderedTable[string, JsonObject]()
   
   while not self.isAtEnd() and self.peek().kind != RightBrace:
     

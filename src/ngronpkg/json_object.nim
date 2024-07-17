@@ -6,12 +6,13 @@ include styles
 type
 
   JsonObjectKind = enum
+    Null,
     String,
     Array,
     Object,
     Number,
-    Boolean,
-    Null
+    Boolean
+    
 
   JsonObject* = ref object
     value* : string
@@ -19,7 +20,7 @@ type
     of Array:
       items*: seq[JsonObject]
     of Object:
-      pairs*: OrderedTable[string, JsonObject]
+      pairs*: OrderedTableRef[string, JsonObject]
     else:
       discard
 
