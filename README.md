@@ -103,6 +103,8 @@ Options:
 
 ### Tests
 
-The test files of the original [gron](https://github.com/tomnomnom/gron) are part of this repository
+The test files of the original [gron](https://github.com/tomnomnom/gron) are part of this repository, they are located in `tests/resources/gron`
+
+Other tests files are added to the folder `tests/resources`
 
 ### Benchmarks
