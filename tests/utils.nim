@@ -1,4 +1,5 @@
 import std/tables
+import std/paths
 import ngronpkg/json_object
 
 let oneJsonObject* = newJsonObject(Object)

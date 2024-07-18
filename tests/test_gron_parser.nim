@@ -1,12 +1,14 @@
 
-import unittest
-import os
-import strutils
+import std/unittest
+import std/os
+import ngronpkg/json_object
 import ngronpkg/gron_parser
+import utils 
 
 test "gron parser basic":
-    let file = "tests/resources/gron/one.gron"
-    let f =  open(file)
-    defer: f.close()
-    gronStringToJson(f.readAll(), silent = false, sort = false, colorize = false)
+  let file = joinPath("tests", "resources", "gron", "one.gron")
+  let f =  open(file)
+  defer: f.close()
+  let result =  gronStringToJsonObject(f.readAll())
+  check result == oneJsonObject
 
