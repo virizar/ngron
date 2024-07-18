@@ -65,7 +65,30 @@ Lets save the gron output to a file `out.gron`
 
 And finally lets ungron our `out.gron` file to get the original JSON input
 
-
+``` bash
+> ./ngron -u out.gron
+{
+  "integer": 1,
+  "string": "simple string",
+  "array": [
+    0,
+    1,
+    2
+  ],
+  "nest": {
+    "doubleNest": {
+      "arrayNest": [
+        {
+          "1": 1,
+          "2": 2
+        }
+      ]
+    }
+  },
+  "boolean": true,
+  "null": null
+}
+```
 
 ### CLI 
 
@@ -92,14 +115,28 @@ Options:
 
 
 ### Features 
-- [x] Read from file
-- [ ] Read from URL
-- [x] Read from stdin
-- [x] Validate input JSON
-- [x] Colorize output
-- [x] Sort output
-- [x] Convert gron assignments back to JSON
-- [x] Output values only
+- Input Types
+  - [x] File
+  - [ ] URL (http/https)
+  - [x] stdin pipes
+- Input formats
+  - [x] JSON
+  - [x] gron
+  - [ ] jgron
+- Conversions
+  - [x] JSON -> gron
+  - [ ] JSON -> jgron
+  - [x] gron -> JSON
+  - [ ] gron -> jgron
+  - [ ] jgron -> gron
+  - [ ] jgron -> json
+- Output formatting
+  - [x] Sorted keys
+  - [x] Colorized
+  - [x] Values only
+- Other
+  - [x] Validate input JSON
+
 
 ### Tests
 
