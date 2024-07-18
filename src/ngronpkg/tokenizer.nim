@@ -113,7 +113,11 @@ proc number(self : Tokenizer) : Token =
 proc identifier(self: Tokenizer ) : Token = 
   
   let startP = self.current - 1
-  while self.peek().isAlphaNumeric():
+
+  if self.peek().isNumber():
+    self.error("Identifiers cannot start with a number")
+
+  while self.peek() notin ['\0',' ', '\n', '\t', '\r', '{', '}', '[', ']', ',', ':', '=', ';', '.']:
       discard self.advance()
   let lexeme = self.data[startP..<self.current]
   case lexeme:
@@ -162,12 +166,8 @@ proc tokenize*(self : Tokenizer) : seq[Token] =
       if isNumber(curChar) or curChar == '-':
         result.add(self.number())
         continue
-
-      if curChar in ['_', '$'] or curChar.isAlphaAscii():
-        result.add(self.identifier())
-        continue
-
-      self.error(fmt"Cannot tokenize character '{curChar}'")  
+        
+      result.add(self.identifier())
   
   result.add(Token(kind : Eof, lexeme : "", start : self.current - 1))
 
