@@ -22,11 +22,11 @@ type
     lexeme* : string
     start* : int
 
-proc newToken*(kind : TokenKind, lexeme : string) : Token = 
+proc newToken*(kind : TokenKind, lexeme : string, start:  int) : Token = 
   new(result)
   result.kind = kind
   result.lexeme = lexeme
-  result.start = 0
+  result.start = start
 
 proc `$`*(self : Token) : string = 
   result &= "Token(" 

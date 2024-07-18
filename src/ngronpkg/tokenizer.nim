@@ -3,7 +3,7 @@ import std/strutils
 import token
 
 type
-  Tokenizer* = ref object of RootObj
+  Tokenizer* = ref object 
     current : int 
     data: string
 
@@ -108,7 +108,7 @@ proc number(self : Tokenizer) : Token =
     else:
       break
 
-  return Token(kind : Number, lexeme : self.data[startP..<self.current], start : startP)
+  return newToken( Number,  self.data[startP..<self.current],  startP)
 
 proc identifier(self: Tokenizer ) : Token = 
   
@@ -122,11 +122,11 @@ proc identifier(self: Tokenizer ) : Token =
   let lexeme = self.data[startP..<self.current]
   case lexeme:
   of "true", "false":
-    return Token(kind : Boolean, lexeme : lexeme, start : startP)
+    return newToken( Boolean, lexeme, startP)
   of "null":
-    return Token(kind : Null, lexeme : lexeme, start : startP)
+    return newToken( Null, lexeme, startP)
   else:
-    return Token(kind : Identifier, lexeme : lexeme, start : startP)
+    return newToken( Identifier, lexeme, startP)
   
 proc tokenize*(self : Tokenizer) : seq[Token] =
   var curChar : char
@@ -134,28 +134,28 @@ proc tokenize*(self : Tokenizer) : seq[Token] =
     curChar = self.advance()
     case curChar:
     of '{':
-      result.add(Token(kind : LeftBrace, lexeme : "{", start : self.current - 1))
+      result.add(newToken( LeftBrace,  "{",  self.current - 1))
     of '}':
-      result.add(Token(kind : RightBrace, lexeme : "}", start : self.current - 1))
+      result.add(newToken( RightBrace,  "}",  self.current - 1))
     of '[':
-      result.add(Token(kind : LeftBracket, lexeme : "[", start : self.current - 1))
+      result.add(newToken( LeftBracket,  "[",  self.current - 1))
     of ']':
-      result.add(Token(kind : RightBracket, lexeme : "]", start : self.current - 1))
+      result.add(newToken( RightBracket,  "]",  self.current - 1))
     of ',':
-      result.add(Token(kind : Comma, lexeme : ",", start : self.current - 1))
+      result.add(newToken( Comma,  ",",  self.current - 1))
     of ':':
-      result.add(Token(kind : Colon, lexeme : ":", start : self.current - 1))
+      result.add(newToken( Colon,  ":",  self.current - 1))
     of '=':
-      result.add(Token(kind : Equal, lexeme : "=", start : self.current - 1))
+      result.add(newToken( Equal,  "=",  self.current - 1))
     of ';':
-      result.add(Token(kind : Semicolon, lexeme : ";", start : self.current - 1))
+      result.add(newToken( Semicolon,  ";",  self.current - 1))
     of '.':
-      result.add(Token(kind : Dot, lexeme : ".", start : self.current - 1))
+      result.add(newToken( Dot,  ".",  self.current - 1))
     of '\'', '\"':
       let startP = self.current
       while self.peek() != curChar:
         discard self.advance()
-      result.add(Token(kind : String, lexeme : self.data[startP..<self.current], start : startP))
+      result.add(newToken( String,  self.data[startP..<self.current],  startP))
       discard self.advance()
     # TODO :  RAise exception for mismatched quote
     else:
@@ -169,7 +169,7 @@ proc tokenize*(self : Tokenizer) : seq[Token] =
         
       result.add(self.identifier())
   
-  result.add(Token(kind : Eof, lexeme : "", start : self.current - 1))
+  result.add(newToken( Eof, "",  self.current - 1))
 
 
 
