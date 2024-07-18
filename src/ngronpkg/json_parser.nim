@@ -1,17 +1,15 @@
 import std/strformat
-import std/strutils
-import std/enumerate
 import std/algorithm
 import std/tables
-include json_object
-include base_parser
-include tokenizer
+import token
+import tokenizer
+import json_object
+import base_parser
+
 
 type
   JsonParser* = ref object of BaseParser
-    silent : bool = false
-    colorize : bool = false
-    sort : bool = false
+
   
 # forward declarations
 proc parseValue(self : JsonParser) : JsonObject 
@@ -48,7 +46,8 @@ proc parseObject(self : JsonParser) : JsonObject =
   if self.sort:
     itemPairs.sort(system.cmp)
 
-  JsonObject(kind : Object, pairs : itemPairs)
+  result = newJsonObject(Object)
+  result.props = itemPairs
 
 proc parseArray(self : JsonParser) : JsonObject =
 
@@ -65,7 +64,8 @@ proc parseArray(self : JsonParser) : JsonObject =
 
   discard self.consume(RightBracket, "Expected ] at the end of an array ")
 
-  JsonObject(kind : Array, items : items)
+  result = newJsonObject(Array)
+  result.items = items
 
 proc parseValue(self : JsonParser) : JsonObject =
   while not self.isAtEnd():
@@ -76,13 +76,13 @@ proc parseValue(self : JsonParser) : JsonObject =
     of LeftBracket:
       return self.parseArray()
     of String:
-      return JsonObject(kind : String, value : token.lexeme)
+      return newJsonObject(String, token.lexeme)
     of Number:
-      return JsonObject(kind : Number, value : token.lexeme)
+      return newJsonObject(Number, token.lexeme)
     of Boolean:
-      return JsonObject(kind : Boolean, value : token.lexeme)
+      return newJsonObject(Boolean, token.lexeme)
     of Null:
-      return JsonObject(kind : Null, value : token.lexeme)
+      return newJsonObject(Null, token.lexeme)
     else:
       self.error(fmt("Cannot parse Token '{token}'"))  
 
@@ -104,7 +104,15 @@ proc stringToGron*(data : string, silent : bool = false, sort : bool = false, co
     jsonPointerTree.dumpGron(path = "json", colorize = colorize)
 
 
+proc jsonStringToJsonObject*(data: string) : JsonObject = 
+  
+  var tokenizer = newTokenizer(data)
 
+  var tokens = tokenizer.tokenize()
+
+  var parser = newJsonParser(data, tokens, false, false, false)
+
+  parser.parseValue()
 
 
 

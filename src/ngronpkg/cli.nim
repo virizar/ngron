@@ -1,6 +1,6 @@
 import std/cmdline
 import std/options
-# import json_parser
+import json_parser
 import gron_parser
 import argparse
 

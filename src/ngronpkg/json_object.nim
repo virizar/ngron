@@ -1,11 +1,12 @@
 import std/strutils
 import std/enumerate
 import std/tables
+import std/strformat
 include styles
 
 type
 
-  JsonObjectKind = enum
+  JsonObjectKind* = enum
     Null,
     String,
     Array,
@@ -16,23 +17,32 @@ type
 
   JsonObject* = ref object
     value* : string
-    case kind*: JsonObjectKind  
-    of Array:
-      items*: seq[JsonObject]
-    of Object:
-      pairs*: OrderedTableRef[string, JsonObject]
-    else:
-      discard
+    kind*: JsonObjectKind  
+    items*: seq[JsonObject]
+    props*: OrderedTableRef[string, JsonObject]
 
-proc `$`(self : JsonObject) : string = 
+
+proc newJsonObject*(kind : JsonObjectKind, value : string = "") : JsonObject =
+  new(result)
+  result.kind = kind
+  result.value = value
+  result.items = @[]
+  result.props = newOrderedTable[string, JsonObject]()
+
+
+proc `$`*(self : JsonObject) : string = 
   
   result &= "JsonObject("
   result &= $self.kind
   result &= ", '"
   result &= self.value
+  result &= "', "
+  result &= $self.items
+  result &= ", "
+  result &= $self.props
   result &= "')"
 
-proc dumpJson(self : JsonObject, level : int = 0, indent : int = 2,  colorize : bool = false) =
+proc dumpJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize : bool = false) =
 
   case self.kind:
   of String:
@@ -59,7 +69,7 @@ proc dumpJson(self : JsonObject, level : int = 0, indent : int = 2,  colorize : 
     else:
       stdout.write("{\n")
     var i = 0
-    for key, value in self.pairs.pairs():
+    for key, value in self.props.pairs():
       stdout.write(' '.repeat(level + indent))
       if colorize:
         stdout.write(KEY_COLOR)
@@ -73,7 +83,7 @@ proc dumpJson(self : JsonObject, level : int = 0, indent : int = 2,  colorize : 
         stdout.write("\"")
       stdout.write(": ")
       value.dumpJson(level = level + indent,  colorize = colorize)
-      if i != self.pairs.len - 1:
+      if i != self.props.len - 1:
         stdout.writeLine(",")
       else:
         stdout.write("\n")
@@ -104,7 +114,7 @@ proc dumpJson(self : JsonObject, level : int = 0, indent : int = 2,  colorize : 
       stdout.write("]")
     stdout.flushFile() 
     
-proc dumpGron(self : JsonObject, path : string = "", colorize : bool = false) =
+proc dumpGron*(self : JsonObject, path : string = "", colorize : bool = false) =
   
   case self.kind:
   of String:
@@ -151,17 +161,21 @@ proc dumpGron(self : JsonObject, path : string = "", colorize : bool = false) =
     
     stdout.write(";\n")
 
-    for key, value in self.pairs.pairs():
+    for key, value in self.props.pairs():
       var pathAppend = "."
-      if colorize : 
-        pathAppend &= KEY_COLOR
-        pathAppend &= key
-        pathAppend &= COLOR_END
-      else:
-        pathAppend &= key
 
-      for character in key:
-        if not (isAlphaNumeric(character) or character == '_'):
+      if key[0] in ['_', '$'] or key[0].isAlphaAscii():
+
+        if colorize : 
+          pathAppend &= KEY_COLOR
+          pathAppend &= key
+          pathAppend &= COLOR_END
+        else:
+          pathAppend &= key
+      
+      else:
+
+        for character in key:
           if colorize : 
             pathAppend = STYLED_LEFT_BRACKET
             pathAppend &= STRING_COLOR
@@ -223,7 +237,7 @@ proc dumpGron(self : JsonObject, path : string = "", colorize : bool = false) =
       obj.dumpGron(path = currentPath, colorize = colorize)
       inc(index)
 
-proc dumpValues(self : JsonObject, colorize : bool = false) =
+proc dumpValues*(self : JsonObject, colorize : bool = false) =
 
   case self.kind:
   of String:
@@ -247,9 +261,41 @@ proc dumpValues(self : JsonObject, colorize : bool = false) =
     stdout.write("\n")
     stdout.flushFile()  
   of Object:
-    for key,value in self.pairs.pairs():
+    for key,value in self.props.pairs():
       value.dumpValues(colorize = colorize)
   of Array:
     for obj in self.items:
       obj.dumpValues(colorize = colorize)
 
+proc `==`*(self :  JsonObject , other : JsonObject) : bool =
+
+  if self.kind != other.kind:
+    echo "Kind mismatch"
+    return false
+
+  if self.value != other.value:
+    echo "Value mismatch"
+    return false
+
+  if self.items.len != other.items.len:
+    echo "Items length mismatch"
+    return false
+
+  if self.props.len != other.props.len:
+    echo "Props length mismatch"
+    return false
+
+  for i in 0..<self.items.len:
+    if self.items[i] != other.items[i]:
+      echo fmt("Item mismatch at index {i}")
+      return false
+
+  for key, value in self.props.pairs():
+    if not other.props.hasKey(key):
+      echo fmt("Key {key} not found in other")
+      return false
+    if value != other.props[key]:
+      echo fmt("Value mismatch for key {key}")
+      return false
+
+  true
