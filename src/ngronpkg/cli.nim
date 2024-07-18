@@ -3,6 +3,7 @@ import std/sequtils
 import std/options
 import json_parser
 import gron_parser
+import jgron_parser
 import argparse
 
 var p = newParser:
