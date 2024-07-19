@@ -122,7 +122,7 @@ Options:
 - Input formats
   - [x] JSON
   - [x] gron
-  - [ ] jgron
+  - [x] jgron
 - Conversions
   - [x] JSON -> gron
   - [ ] JSON -> jgron
