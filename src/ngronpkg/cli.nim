@@ -1,6 +1,7 @@
 import std/cmdline
 import std/sequtils
 import std/options
+import json_object
 import json_parser
 import gron_parser
 import jgron_parser
@@ -10,44 +11,54 @@ var p = newParser:
   help("Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable")
   flag( "--version", help="Print version information", shortcircuit=true)
   flag( "--validate", help="Validate json input. Will only print errors and warnings.")
-  flag( "-s", "--sort", help="sort keys (slower)")
+  flag( "-s", "--sort", help="Sort keys (slower)")
   flag("-v", "--values", help="Print just the values of provided assignments")
   flag("-c", "--colorize", help="Colorize output")
-  flag("-j", "--json-stream", help="Represent gron data as JSON stream")
-  flag("-u", "--ungron", help="Reverse the operation (turn assignments back into JSON)")
-  arg("input", help="Path to json file")
+  option("-i", "--input-type", choices = @["json", "gron", "jgron"], help="Input type (Inferred from file extension)", default = some("json"))
+  option("-o", "--output-type", choices = @["json", "gron", "jgron"], help="Output type", default = some("gron"))
+  arg("input", help="Path to file or URL path. Ignored if piping from  stdin", default = some("stdin"))
 
 proc runCli*(params : seq[string], pipeInput : bool) = 
 
   try:
     
-    var tempParams = params
+    let opts = p.parse(params)
 
-    if pipeInput:
-      tempParams = tempParams.filter(proc(x: string): bool = x.startsWith('-'))
-      tempParams.add("stdin")
+    var f : File = stdin
 
-    let opts = p.parse(tempParams)
+    if opts.input == "stdin" and not pipeInput:
+      echo p.help
+      quit(1)
 
-    var f : File 
+    f = open(opts.input)
     
-    if pipeInput:
-      f = stdin
-    else:
-      f = open(opts.input)
-
     defer: f.close()
-    
-    if opts.validate:
-      stringToGron(f.readAll(), silent = true, false, colorize = false)
-      echo "FILE OK"
+
+    var jsonObject : JsonObject
+
+    if opts.inputType == "json":
+      jsonObject = jsonStringToJsonObject(f.readAll())
+    elif opts.inputType == "gron":
+      jsonObject = gronStringToJsonObject(f.readAll())
+    elif opts.inputType == "jgron":
+      jsonObject = jgronStringToJsonObject(f.readAll())
+    else:
+      echo "Unknown input type"
+      quit(1)
+
+    if opts.values:
+      jsonObject.printValues()
       quit(0)
 
-    if opts.ungron:
-      gronStringToJson(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize)
-      quit(0)
-    
-    stringToGron(f.readAll(), silent = false, sort = opts.sort, colorize = opts.colorize,  values = opts.values)
+    if opts.outputType == "json":
+      jsonObject.printJson(sort = opts.sort, colorize = opts.colorize)
+    elif opts.outputType == "jgron":
+      jsonObject.printJgron(sort = opts.sort, colorize = opts.colorize)
+    elif opts.outputType == "gron":
+      jsonObject.printGron(sort = opts.sort, path = "json", colorize = opts.colorize)
+    else:
+      echo "Unknown output type"
+      quit(1)
 
   except ShortCircuit as err:
     if err.flag == "argparse_help":
