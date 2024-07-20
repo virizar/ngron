@@ -6,7 +6,7 @@ import ngronpkg/gron_parser
 import ngronpkg/json_parser
 import ngronpkg/jgron_parser
 
-test "multiple conversions":
+test "json object from different sources" :
   let names = ["one", "two", "three", "github"]
   let folder = joinPath("tests", "resources", "gron")
 
