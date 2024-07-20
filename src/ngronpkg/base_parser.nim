@@ -7,9 +7,6 @@ type
     current* : int 
     tokens*: seq[Token]
     data* : string
-    silent* : bool = false
-    colorize* : bool = false
-    sort* : bool = false
 
   ParserException* = ref Exception
 

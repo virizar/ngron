@@ -12,7 +12,7 @@ type
     
   JGronParserException* = ref Exception
 
-proc newJGronParser(data : string, tokens : seq[Token], silent :bool, colorize : bool , sort: bool) : JGronParser = 
+proc newJGronParser(data : string, tokens : seq[Token]) : JGronParser = 
   new(result)
   result.current = 0
   result.data = data
@@ -20,9 +20,6 @@ proc newJGronParser(data : string, tokens : seq[Token], silent :bool, colorize :
   var glob = newJsonObject(Object)
   glob.props["json"] = newJsonObject(Null)
   result.globalObject = glob
-  result.silent = silent
-  result.colorize = colorize
-  result.sort = sort
 
 proc parseValue(self : JGronParser, obj : JsonObject)  =
   let token = self.advance()
@@ -112,21 +109,7 @@ proc jgronStringToJsonObject*(data: string) : JsonObject =
 
   var tokens = tokenizer.tokenize()
 
-  var parser = newJGronParser(data, tokens, false, false, false)
+  var parser = newJGronParser(data, tokens)
 
   parser.parse()
 
-proc jgronStringToJson*(data: string, silent : bool, sort : bool, colorize : bool, values: bool = false) =
-  var tokenizer = newTokenizer(data)
-
-  var tokens = tokenizer.tokenize()
-  var parser = newJGronParser(data, tokens, silent, colorize, sort)
-
-  let jsonPointerTree = parser.parse()
-
-  if values:
-    jsonPointerTree.dumpValues(colorize = colorize)
-    return
-
-  if not silent:
-    jsonPointerTree.dumpGron(path = "json", colorize = colorize)

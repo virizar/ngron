@@ -42,7 +42,41 @@ proc `$`*(self : JsonObject) : string =
   result &= $self.props
   result &= "')"
 
-proc dumpJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize : bool = false) =
+
+proc `==`*(self :  JsonObject , other : JsonObject) : bool =
+
+  if self.kind != other.kind:
+    echo "Kind mismatch"
+    return false
+
+  if self.value != other.value:
+    echo "Value mismatch"
+    return false
+
+  if self.items.len != other.items.len:
+    echo "Items length mismatch"
+    return false
+
+  if self.props.len != other.props.len:
+    echo "Props length mismatch"
+    return false
+
+  for i in 0..<self.items.len:
+    if self.items[i] != other.items[i]:
+      echo fmt("Item mismatch at index {i}")
+      return false
+
+  for key, value in self.props.pairs():
+    if not other.props.hasKey(key):
+      echo fmt("Key {key} not found in other")
+      return false
+    if value != other.props[key]:
+      echo fmt("Value mismatch for key {key}")
+      return false
+
+  true
+
+proc printJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize : bool = false, sort : bool = false) =
 
   case self.kind:
   of String:
@@ -68,6 +102,10 @@ proc dumpJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize :
       stdout.write("\n")
     else:
       stdout.write("{\n")
+    
+    if sort:
+      self.props.sort(system.cmp)
+
     var i = 0
     for key, value in self.props.pairs():
       stdout.write(' '.repeat(level + indent))
@@ -82,7 +120,7 @@ proc dumpJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize :
         stdout.write(key)
         stdout.write("\"")
       stdout.write(": ")
-      value.dumpJson(level = level + indent,  colorize = colorize)
+      value.printJson(level = level + indent,  colorize = colorize, sort = sort)
       if i != self.props.len - 1:
         stdout.writeLine(",")
       else:
@@ -102,7 +140,7 @@ proc dumpJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize :
       stdout.write("[\n")
     for i, obj in enumerate(self.items):
       stdout.write(' '.repeat(level + indent))
-      obj.dumpJson(level = level + indent,  colorize = colorize)
+      obj.printJson(level = level + indent,  colorize = colorize, sort = sort)
       if i != self.items.len - 1:
         stdout.writeLine(",")
       else:
@@ -114,7 +152,7 @@ proc dumpJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize :
       stdout.write("]")
     stdout.flushFile() 
     
-proc dumpGron*(self : JsonObject, path : string = "", colorize : bool = false) =
+proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, sort: bool = false) =
   
   case self.kind:
   of String:
@@ -161,6 +199,9 @@ proc dumpGron*(self : JsonObject, path : string = "", colorize : bool = false) =
     
     stdout.write(";\n")
 
+    if sort:
+      self.props.sort(system.cmp)
+
     for key, value in self.props.pairs():
       var pathAppend = "."
 
@@ -198,7 +239,7 @@ proc dumpGron*(self : JsonObject, path : string = "", colorize : bool = false) =
         currentPath &= COLOR_END
         currentPath &= pathAppend
 
-      value.dumpGron(path = currentPath, colorize = colorize)
+      value.printGron(path = currentPath, colorize = colorize, sort=sort)
   of Array:
 
     if colorize : 
@@ -234,10 +275,10 @@ proc dumpGron*(self : JsonObject, path : string = "", colorize : bool = false) =
         currentPath &= "["
         currentPath &= $index
         currentPath &= "]"
-      obj.dumpGron(path = currentPath, colorize = colorize)
+      obj.printGron(path = currentPath, colorize = colorize, sort=sort)
       inc(index)
 
-proc dumpValues*(self : JsonObject, colorize : bool = false) =
+proc printValues*(self : JsonObject, colorize : bool = false) =
 
   case self.kind:
   of String:
@@ -262,40 +303,7 @@ proc dumpValues*(self : JsonObject, colorize : bool = false) =
     stdout.flushFile()  
   of Object:
     for key,value in self.props.pairs():
-      value.dumpValues(colorize = colorize)
+      value.printValues(colorize = colorize)
   of Array:
     for obj in self.items:
-      obj.dumpValues(colorize = colorize)
-
-proc `==`*(self :  JsonObject , other : JsonObject) : bool =
-
-  if self.kind != other.kind:
-    echo "Kind mismatch"
-    return false
-
-  if self.value != other.value:
-    echo "Value mismatch"
-    return false
-
-  if self.items.len != other.items.len:
-    echo "Items length mismatch"
-    return false
-
-  if self.props.len != other.props.len:
-    echo "Props length mismatch"
-    return false
-
-  for i in 0..<self.items.len:
-    if self.items[i] != other.items[i]:
-      echo fmt("Item mismatch at index {i}")
-      return false
-
-  for key, value in self.props.pairs():
-    if not other.props.hasKey(key):
-      echo fmt("Key {key} not found in other")
-      return false
-    if value != other.props[key]:
-      echo fmt("Value mismatch for key {key}")
-      return false
-
-  true
+      obj.printValues(colorize = colorize)

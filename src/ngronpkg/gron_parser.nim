@@ -13,15 +13,12 @@ type
     
   GronParserException* = ref Exception
 
-proc newGronParser(data : string, tokens : seq[Token], silent :bool, colorize : bool , sort: bool) : GronParser = 
+proc newGronParser(data : string, tokens : seq[Token]) : GronParser = 
   new(result)
   result.current = 0
   result.data = data
   result.tokens = tokens
   result.globalObject = newJsonObject(Object)
-  result.silent = silent
-  result.colorize = colorize
-  result.sort = sort
 
 proc parseValue(self : GronParser, obj : JsonObject)  =
   let token = self.advance()
@@ -129,22 +126,6 @@ proc parse(self : GronParser) : JsonObject =
 
   self.globalObject.props["json"]
 
-proc gronStringToJson*(data : string, silent : bool = false, sort : bool = false, colorize : bool = false, values: bool = false) =
-
-  var tokenizer = newTokenizer(data)
-
-  var tokens = tokenizer.tokenize()
-
-  var parser = newGronParser(data, tokens, silent, colorize, sort)
-
-  let jsonPointerTree = parser.parse()
-
-  # if values:
-  #   jsonPointerTree.dumpValues(colorize = colorize)
-  #   return
-
-  if not silent:
-    jsonPointerTree.dumpJson(colorize = colorize)
 
 proc gronStringToJsonObject*(data: string) : JsonObject = 
   
@@ -152,6 +133,6 @@ proc gronStringToJsonObject*(data: string) : JsonObject =
 
   var tokens = tokenizer.tokenize()
 
-  var parser = newGronParser(data, tokens, false, false, false)
+  var parser = newGronParser(data, tokens)
 
   parser.parse()

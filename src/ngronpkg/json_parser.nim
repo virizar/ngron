@@ -14,14 +14,11 @@ type
 # forward declarations
 proc parseValue(self : JsonParser) : JsonObject 
 
-proc newJsonParser(data : string, tokens : seq[Token],  silent :bool, colorize : bool , sort: bool) : JsonParser = 
+proc newJsonParser(data : string, tokens : seq[Token]) : JsonParser = 
   new(result)
   result.current = 0
   result.data = data
   result.tokens = tokens
-  result.silent = silent
-  result.colorize = colorize
-  result.sort = sort
 
 
 proc parseObject(self : JsonParser) : JsonObject =
@@ -42,9 +39,6 @@ proc parseObject(self : JsonParser) : JsonObject =
     discard self.advance()
 
   discard self.consume(RightBrace, "Expected ] at the end of an array ")
-
-  if self.sort:
-    itemPairs.sort(system.cmp)
 
   result = newJsonObject(Object)
   result.props = itemPairs
@@ -86,31 +80,13 @@ proc parseValue(self : JsonParser) : JsonObject =
     else:
       self.error(fmt("Cannot parse Token '{token}'"))  
 
-proc stringToGron*(data : string, silent : bool = false, sort : bool = false, colorize : bool = false, values: bool = false) =
-
-  var tokenizer = newTokenizer(data)
-
-  var tokens = tokenizer.tokenize()
-
-  var parser = newJsonParser(data, tokens, silent, colorize, sort)
-
-  let jsonPointerTree = parser.parseValue()
-
-  if values:
-    jsonPointerTree.dumpValues(colorize = colorize)
-    return
-
-  if not silent:
-    jsonPointerTree.dumpGron(path = "json", colorize = colorize)
-
-
 proc jsonStringToJsonObject*(data: string) : JsonObject = 
   
   var tokenizer = newTokenizer(data)
 
   var tokens = tokenizer.tokenize()
 
-  var parser = newJsonParser(data, tokens, false, false, false)
+  var parser = newJsonParser(data, tokens)
 
   parser.parseValue()
 
