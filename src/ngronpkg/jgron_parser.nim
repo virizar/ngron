@@ -2,17 +2,17 @@ import std/strformat
 import std/strutils
 import std/tables
 import token
-import tokenizer 
+import tokenizer
 import base_parser
 import json_object
 
 type
   JGronParser* = ref object of BaseParser
-    globalObject : JsonObject
-    
+    globalObject: JsonObject
+
   JGronParserException* = ref Exception
 
-proc newJGronParser(data : string, tokens : seq[Token]) : JGronParser = 
+proc newJGronParser(data: string, tokens: seq[Token]): JGronParser =
   new(result)
   result.current = 0
   result.data = data
@@ -21,9 +21,9 @@ proc newJGronParser(data : string, tokens : seq[Token]) : JGronParser =
   glob.props["json"] = newJsonObject(Null)
   result.globalObject = glob
 
-proc parseValue(self : JGronParser, obj : JsonObject)  =
+proc parseValue(self: JGronParser, obj: JsonObject) =
   let token = self.advance()
-  case token.kind :
+  case token.kind:
   of LeftBrace:
     discard self.consume(RightBrace, "Expected '}' empty object")
     obj.kind = Object
@@ -43,9 +43,9 @@ proc parseValue(self : JGronParser, obj : JsonObject)  =
     obj.kind = Null
     obj.value = token.lexeme
   else:
-    self.error(fmt("Cannot parse Token '{self.peek()}'"))  
+    self.error(fmt("Cannot parse Token '{self.peek()}'"))
 
-proc parseAssignment(self : JGronParser)  = 
+proc parseAssignment(self: JGronParser) =
 
   discard self.consume(LeftBracket, "Expected '[' at the beginning of assignment")
 
@@ -64,12 +64,12 @@ proc parseAssignment(self : JGronParser)  =
       if baseObject.props.hasKey(token.lexeme):
         baseObject = baseObject.props[token.lexeme]
       else:
-        var newObject = newJsonObject(Null) 
+        var newObject = newJsonObject(Null)
         baseObject.props[token.lexeme] = newObject
-        baseObject = newObject      
+        baseObject = newObject
 
     of Number:
-      
+
       if baseObject.kind != Array:
         self.error("Cannot access index of non Array")
 
@@ -77,15 +77,15 @@ proc parseAssignment(self : JGronParser)  =
       if index < baseObject.items.len:
         baseObject = baseObject.items[index]
       else:
-        var newObject  = newJsonObject(Null)
+        var newObject = newJsonObject(Null)
         baseObject.items.insert(newObject, index)
         baseObject = newObject
-      
+
     of Comma:
-      discard 
+      discard
     else:
       self.error("Expected string or number index")
-    
+
   discard self.consume(RightBracket, "Expected ']' after array index")
 
   discard self.consume(Comma, "Expected ',' after array index")
@@ -95,7 +95,7 @@ proc parseAssignment(self : JGronParser)  =
   discard self.consume(RightBracket, "Expected ']' at the end of assignment")
 
 
-proc parse(self : JGronParser) : JsonObject = 
+proc parse(self: JGronParser): JsonObject =
 
   while not self.isAtEnd():
     self.parseAssignment()
@@ -103,8 +103,8 @@ proc parse(self : JGronParser) : JsonObject =
   self.globalObject.props["json"]
 
 
-proc jgronStringToJsonObject*(data: string) : JsonObject = 
-  
+proc jgronStringToJsonObject*(data: string): JsonObject =
+
   var tokenizer = newTokenizer(data)
 
   var tokens = tokenizer.tokenize()

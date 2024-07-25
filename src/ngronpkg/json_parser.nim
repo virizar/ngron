@@ -10,28 +10,28 @@ import base_parser
 type
   JsonParser* = ref object of BaseParser
 
-  
-# forward declarations
-proc parseValue(self : JsonParser) : JsonObject 
 
-proc newJsonParser(data : string, tokens : seq[Token]) : JsonParser = 
+# forward declarations
+proc parseValue(self: JsonParser): JsonObject
+
+proc newJsonParser(data: string, tokens: seq[Token]): JsonParser =
   new(result)
   result.current = 0
   result.data = data
   result.tokens = tokens
 
 
-proc parseObject(self : JsonParser) : JsonObject =
+proc parseObject(self: JsonParser): JsonObject =
 
   var itemPairs = newOrderedTable[string, JsonObject]()
-  
+
   while not self.isAtEnd() and self.peek().kind != RightBrace:
-    
-    let key =  self.consume(String, "Expected string as key for object")
+
+    let key = self.consume(String, "Expected string as key for object")
 
     discard self.consume(Colon, "Expected ':' after object key")
 
-    itemPairs[key.lexeme] =  self.parseValue()
+    itemPairs[key.lexeme] = self.parseValue()
 
     if self.peek().kind != Comma:
       break
@@ -43,12 +43,12 @@ proc parseObject(self : JsonParser) : JsonObject =
   result = newJsonObject(Object)
   result.props = itemPairs
 
-proc parseArray(self : JsonParser) : JsonObject =
+proc parseArray(self: JsonParser): JsonObject =
 
   var index = 0
   var items = newSeq[JsonObject]()
-  
-  while not self.isAtEnd() and  self.peek().kind != RightBracket:
+
+  while not self.isAtEnd() and self.peek().kind != RightBracket:
 
     items.add(self.parseValue())
     if self.peek().kind != Comma:
@@ -61,12 +61,12 @@ proc parseArray(self : JsonParser) : JsonObject =
   result = newJsonObject(Array)
   result.items = items
 
-proc parseValue(self : JsonParser) : JsonObject =
+proc parseValue(self: JsonParser): JsonObject =
   while not self.isAtEnd():
     let token = self.advance()
     case token.kind:
     of LeftBrace:
-      return  self.parseObject()
+      return self.parseObject()
     of LeftBracket:
       return self.parseArray()
     of String:
@@ -78,10 +78,10 @@ proc parseValue(self : JsonParser) : JsonObject =
     of Null:
       return newJsonObject(Null, token.lexeme)
     else:
-      self.error(fmt("Cannot parse Token '{token}'"))  
+      self.error(fmt("Cannot parse Token '{token}'"))
 
-proc jsonStringToJsonObject*(data: string) : JsonObject = 
-  
+proc jsonStringToJsonObject*(data: string): JsonObject =
+
   var tokenizer = newTokenizer(data)
 
   var tokens = tokenizer.tokenize()

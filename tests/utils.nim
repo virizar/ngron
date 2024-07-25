@@ -17,13 +17,13 @@ oneJsonObject.props["four"].items[1].value = "2"
 oneJsonObject.props["four"].items.add(newJsonObject(Number))
 oneJsonObject.props["four"].items[2].value = "3"
 oneJsonObject.props["four"].items.add(newJsonObject(Number))
-oneJsonObject.props["four"].items[3].value= "4"
+oneJsonObject.props["four"].items[3].value = "4"
 oneJsonObject.props["five"] = newJsonObject(Object)
 oneJsonObject.props["five"].props["alpha"] = newJsonObject(Array)
 oneJsonObject.props["five"].props["alpha"].items.add(newJsonObject(String))
 oneJsonObject.props["five"].props["alpha"].items[0].value = "fo"
 oneJsonObject.props["five"].props["alpha"].items.add(newJsonObject(String))
-oneJsonObject.props["five"].props["alpha"].items[1] .value = "fum"
+oneJsonObject.props["five"].props["alpha"].items[1].value = "fum"
 oneJsonObject.props["five"].props["beta"] = newJsonObject(Object)
 oneJsonObject.props["five"].props["beta"].props["hey"] = newJsonObject(String)
 oneJsonObject.props["five"].props["beta"].props["hey"].value = "How's tricks?"

@@ -13,16 +13,16 @@ type
     Object,
     Number,
     Boolean
-    
+
 
   JsonObject* = ref object
-    value* : string
-    kind*: JsonObjectKind  
+    value*: string
+    kind*: JsonObjectKind
     items*: seq[JsonObject]
     props*: OrderedTableRef[string, JsonObject]
 
 
-proc newJsonObject*(kind : JsonObjectKind, value : string = "") : JsonObject =
+proc newJsonObject*(kind: JsonObjectKind, value: string = ""): JsonObject =
   new(result)
   result.kind = kind
   result.value = value
@@ -30,8 +30,8 @@ proc newJsonObject*(kind : JsonObjectKind, value : string = "") : JsonObject =
   result.props = newOrderedTable[string, JsonObject]()
 
 
-proc `$`*(self : JsonObject) : string = 
-  
+proc `$`*(self: JsonObject): string =
+
   result &= "JsonObject("
   result &= $self.kind
   result &= ", '"
@@ -43,7 +43,7 @@ proc `$`*(self : JsonObject) : string =
   result &= "')"
 
 
-proc `==`*(self :  JsonObject , other : JsonObject) : bool =
+proc `==`*(self: JsonObject, other: JsonObject): bool =
 
   if self.kind != other.kind:
     echo "Kind mismatch"
@@ -76,33 +76,34 @@ proc `==`*(self :  JsonObject , other : JsonObject) : bool =
 
   true
 
-proc printJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize : bool = false, sort : bool = false) =
+proc printJson*(self: JsonObject, level: int = 0, indent: int = 2,
+    colorize: bool = false, sort: bool = false) =
 
   case self.kind:
   of String:
-    if colorize : stdout.write(STRING_COLOR)
+    if colorize: stdout.write(STRING_COLOR)
     stdout.write("\"")
     stdout.write(self.value)
     stdout.write("\"")
     if colorize: stdout.write(COLOR_END)
     stdout.flushFile()
   of Boolean, Null:
-    if colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    if colorize: stdout.write(BOOLEAN_NULL_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.flushFile()
   of Number:
-    if colorize : stdout.write(NUMBER_COLOR)
+    if colorize: stdout.write(NUMBER_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
-    stdout.flushFile()  
+    stdout.flushFile()
   of Object:
     if colorize:
       stdout.write(STYLED_LEFT_CURLY_BRACE)
       stdout.write("\n")
     else:
       stdout.write("{\n")
-    
+
     if sort:
       self.props.sort(system.cmp)
 
@@ -120,7 +121,7 @@ proc printJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize 
         stdout.write(key)
         stdout.write("\"")
       stdout.write(": ")
-      value.printJson(level = level + indent,  colorize = colorize, sort = sort)
+      value.printJson(level = level + indent, colorize = colorize, sort = sort)
       if i != self.props.len - 1:
         stdout.writeLine(",")
       else:
@@ -131,7 +132,7 @@ proc printJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize 
       stdout.write(STYLED_RIGHT_CURLY_BRACE)
     else:
       stdout.write("}")
-    stdout.flushFile() 
+    stdout.flushFile()
   of Array:
     if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
@@ -140,7 +141,7 @@ proc printJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize 
       stdout.write("[\n")
     for i, obj in enumerate(self.items):
       stdout.write(' '.repeat(level + indent))
-      obj.printJson(level = level + indent,  colorize = colorize, sort = sort)
+      obj.printJson(level = level + indent, colorize = colorize, sort = sort)
       if i != self.items.len - 1:
         stdout.writeLine(",")
       else:
@@ -150,15 +151,16 @@ proc printJson*(self : JsonObject, level : int = 0, indent : int = 2,  colorize 
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
-    stdout.flushFile() 
-    
-proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, sort: bool = false) =
-  
+    stdout.flushFile()
+
+proc printGron*(self: JsonObject, path: string = "", colorize: bool = false,
+    sort: bool = false) =
+
   case self.kind:
   of String:
     stdout.write(path)
     stdout.write(" = ")
-    if colorize : stdout.write(STRING_COLOR)
+    if colorize: stdout.write(STRING_COLOR)
     stdout.write("\"")
     stdout.write(self.value)
     stdout.write("\"")
@@ -168,7 +170,7 @@ proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, 
   of Boolean, Null:
     stdout.write(path)
     stdout.write(" = ")
-    if colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    if colorize: stdout.write(BOOLEAN_NULL_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.writeLine(";")
@@ -176,27 +178,27 @@ proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, 
   of Number:
     stdout.write(path)
     stdout.write(" = ")
-    if colorize : stdout.write(NUMBER_COLOR)
+    if colorize: stdout.write(NUMBER_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.writeLine(";")
-    stdout.flushFile()  
+    stdout.flushFile()
   of Object:
-    if colorize : 
+    if colorize:
       stdout.write(KEY_COLOR)
       stdout.write(path)
       stdout.write(COLOR_END)
     else:
       stdout.write(path)
-    
+
     stdout.write(" = ")
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_CURLY_BRACE)
       stdout.write(STYLED_RIGHT_CURLY_BRACE)
     else:
       stdout.write("{}")
-    
+
     stdout.write(";\n")
 
     if sort:
@@ -207,17 +209,17 @@ proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, 
 
       if key[0] in ['_', '$'] or key[0].isAlphaAscii():
 
-        if colorize : 
+        if colorize:
           pathAppend &= KEY_COLOR
           pathAppend &= key
           pathAppend &= COLOR_END
         else:
           pathAppend &= key
-      
+
       else:
 
         for character in key:
-          if colorize : 
+          if colorize:
             pathAppend = STYLED_LEFT_BRACKET
             pathAppend &= STRING_COLOR
             pathAppend &= "\""
@@ -233,30 +235,30 @@ proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, 
           break
       var currentPath = path & pathAppend
 
-      if colorize : 
+      if colorize:
         currentPath = KEY_COLOR
         currentPath &= path
         currentPath &= COLOR_END
         currentPath &= pathAppend
 
-      value.printGron(path = currentPath, colorize = colorize, sort=sort)
+      value.printGron(path = currentPath, colorize = colorize, sort = sort)
   of Array:
 
-    if colorize : 
+    if colorize:
       stdout.write(KEY_COLOR)
       stdout.write(path)
       stdout.write(COLOR_END)
     else:
       stdout.write(path)
-    
+
     stdout.write(" = ")
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("[]")
-    
+
     stdout.write(";\n")
 
     var index = 0
@@ -264,7 +266,7 @@ proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, 
       var currentPath = path
       if colorize:
         currentPath = KEY_COLOR
-        currentPath &= path 
+        currentPath &= path
         currentPath &= COLOR_END
         currentPath &= STYLED_LEFT_BRACKET
         currentPath &= NUMBER_COLOR
@@ -275,82 +277,83 @@ proc printGron*(self : JsonObject, path : string = "", colorize : bool = false, 
         currentPath &= "["
         currentPath &= $index
         currentPath &= "]"
-      obj.printGron(path = currentPath, colorize = colorize, sort=sort)
+      obj.printGron(path = currentPath, colorize = colorize, sort = sort)
       inc(index)
 
-proc printJGron*(self : JsonObject, path : string = "", colorize : bool = false, sort: bool = false) =
-  
+proc printJGron*(self: JsonObject, path: string = "", colorize: bool = false,
+    sort: bool = false) =
+
   case self.kind:
   of String:
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
       stdout.write(STYLED_LEFT_BRACKET)
     else:
       stdout.write("[")
       stdout.write("[")
     stdout.write(path)
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
     stdout.write(",")
-    if colorize : stdout.write(STRING_COLOR)
+    if colorize: stdout.write(STRING_COLOR)
     stdout.write("\"")
     stdout.write(self.value)
     stdout.write("\"")
     if colorize: stdout.write(COLOR_END)
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
     stdout.writeLine("")
     stdout.flushFile()
   of Boolean, Null:
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
       stdout.write(STYLED_LEFT_BRACKET)
     else:
       stdout.write("[")
       stdout.write("[")
     stdout.write(path)
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
     stdout.write(",")
-    if colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    if colorize: stdout.write(BOOLEAN_NULL_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
     stdout.writeLine("")
     stdout.flushFile()
   of Number:
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
       stdout.write(STYLED_LEFT_BRACKET)
     else:
       stdout.write("[")
       stdout.write("[")
     stdout.write(path)
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
     stdout.write(",")
-    if colorize : stdout.write(NUMBER_COLOR)
+    if colorize: stdout.write(NUMBER_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
     stdout.writeLine("")
-    stdout.flushFile()  
+    stdout.flushFile()
   of Object:
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
       stdout.write(STYLED_LEFT_BRACKET)
     else:
@@ -359,20 +362,20 @@ proc printJGron*(self : JsonObject, path : string = "", colorize : bool = false,
 
     stdout.write(path)
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
 
     stdout.write(",")
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_CURLY_BRACE)
       stdout.write(STYLED_RIGHT_CURLY_BRACE)
     else:
       stdout.write("{}")
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
@@ -381,27 +384,27 @@ proc printJGron*(self : JsonObject, path : string = "", colorize : bool = false,
 
     if sort:
       self.props.sort(system.cmp)
-    
+
     for key, value in self.props.pairs():
       var pathAppend = ""
-      if colorize : pathAppend &=  STRING_COLOR 
-      pathAppend &=  "\"" 
-      pathAppend &=  key
-      pathAppend &=  "\""
+      if colorize: pathAppend &= STRING_COLOR
+      pathAppend &= "\""
+      pathAppend &= key
+      pathAppend &= "\""
       if colorize: pathAppend &= COLOR_END
 
-      var currentPath : string
-      
+      var currentPath: string
+
       if path == "":
         currentPath = pathAppend
       else:
         currentPath = path & ',' & pathAppend
 
 
-      value.printJGron(path = currentPath, colorize = colorize, sort=sort)
+      value.printJGron(path = currentPath, colorize = colorize, sort = sort)
   of Array:
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
       stdout.write(STYLED_LEFT_BRACKET)
     else:
@@ -410,20 +413,20 @@ proc printJGron*(self : JsonObject, path : string = "", colorize : bool = false,
 
     stdout.write(path)
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
 
     stdout.write(",")
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_LEFT_BRACKET)
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("[]")
 
-    if colorize : 
+    if colorize:
       stdout.write(STYLED_RIGHT_BRACKET)
     else:
       stdout.write("]")
@@ -432,7 +435,7 @@ proc printJGron*(self : JsonObject, path : string = "", colorize : bool = false,
 
     var index = 0
     for obj in self.items:
-      var currentPath = path 
+      var currentPath = path
       if path != "":
         currentPath &= ","
 
@@ -442,14 +445,14 @@ proc printJGron*(self : JsonObject, path : string = "", colorize : bool = false,
         currentPath &= COLOR_END
       else:
         currentPath &= $index
-      obj.printJGron(path = currentPath, colorize = colorize, sort=sort)
+      obj.printJGron(path = currentPath, colorize = colorize, sort = sort)
       inc(index)
 
-proc printValues*(self : JsonObject, colorize : bool = false) =
+proc printValues*(self: JsonObject, colorize: bool = false) =
 
   case self.kind:
   of String:
-    if colorize : stdout.write(STRING_COLOR)
+    if colorize: stdout.write(STRING_COLOR)
     stdout.write("\"")
     stdout.write(self.value)
     stdout.write("\"")
@@ -457,19 +460,19 @@ proc printValues*(self : JsonObject, colorize : bool = false) =
     stdout.write("\n")
     stdout.flushFile()
   of Boolean, Null:
-    if colorize : stdout.write(BOOLEAN_NULL_COLOR)
+    if colorize: stdout.write(BOOLEAN_NULL_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.write("\n")
     stdout.flushFile()
   of Number:
-    if colorize : stdout.write(NUMBER_COLOR)
+    if colorize: stdout.write(NUMBER_COLOR)
     stdout.write(self.value)
     if colorize: stdout.write(COLOR_END)
     stdout.write("\n")
-    stdout.flushFile()  
+    stdout.flushFile()
   of Object:
-    for key,value in self.props.pairs():
+    for key, value in self.props.pairs():
       value.printValues(colorize = colorize)
   of Array:
     for obj in self.items:
