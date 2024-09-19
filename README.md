@@ -65,8 +65,6 @@ Or `jgron`, which outputs a stream of paths and values tuples
 [["nest","null"],null]
 ```
 
-
-
 Lets save the gron output to a file `out.gron`
 
 ``` bash
@@ -94,32 +92,6 @@ And finally lets convert our `out.gron` file to get the original json input
 }
 ```
 
-### CLI 
-
-``` text
-Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable
-
-Usage:
-   [options] [input]
-
-Arguments:
-  [input]          Path to file or URL path. Ignored if piping from  stdin (default: stdin)
-
-Options:
-  -h, --help
-  --version                  Print version information
-  --validate                 Validate json input. Will only print errors and warnings.
-  -s, --sort                 Sort keys (slower)
-  -v, --values               Print just the values of provided assignments
-  -c, --colorize             Colorize output
-  -i, --input-type=INPUT_TYPE
-                             Input type (Inferred from file extension) Possible values: [json, gron, jgron] (default: json)
-  -o, --output-type=OUTPUT_TYPE
-                             Output type Possible values: [json, gron, jgron] (default: gron)
-
-```
-
-
 ### Features 
 - Input Types
   - [x] File
@@ -139,9 +111,31 @@ Options:
   - [x] Colorized
   - [x] Values only
 
+### Things to do
+- [ ] Broader testing
+  - Large files, weird characters.
+- [ ] Full compliance with JSON spec
+  - Identifiers are not really compliant with the spec
+- [ ] Benchmarks and test
+  - Memory consumption and performance vs original implementation?
+- [ ] Optimizations
+  - Compact json object data structure
+  - Stream input instead of reading all string in memory
+  - Better handling of allocations in tokenizer/parser
+  - Multithreading?
 
 ### Tests
+
 
 The test files of the original [gron](https://github.com/tomnomnom/gron) are part of this repository, they are located in `tests/resources/gron`
 
 Other tests files are added to the folder `tests/resources`
+
+The original testing and development has been carried on Ubuntu 20.4
+
+### Resources
+
+- [gron](https://github.com/tomnomnom/gron) repository
+- [Nim std library docs](https://nim-lang.org/docs/lib.html)
+- [Crafting interpreters](https://craftinginterpreters.com/) book. The parsers are heavily inspired on the book!
+- [Scripter's notes on tty on Nim](https://scripter.co/nim-check-if-stdin-stdout-are-associated-with-terminal-or-pipe/), has some great info on Nim tricks all around
