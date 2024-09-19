@@ -1,6 +1,9 @@
 import std/cmdline
 import std/sequtils
 import std/options
+import std/strformat
+import std/net
+import std/httpclient
 import json_object
 import json_parser
 import gron_parser
@@ -10,7 +13,6 @@ import argparse
 var p = newParser:
   help("Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable")
   flag("--version", help = "Print version information", shortcircuit = true)
-  flag("--validate", help = "Validate json input. Will only print errors and warnings.")
   flag("-s", "--sort", help = "Sort keys (slower)")
   flag("-v", "--values", help = "Print just the values of provided assignments")
   flag("-c", "--colorize", help = "Colorize output")
@@ -29,13 +31,25 @@ proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
 
     var f: File = stdin
 
+    var data : string
+
     if opts.input == "stdin" and not pipeInput:
       echo p.help
       quit(1)
 
-    f = open(opts.input)
-
-    defer: f.close()
+    if opts.input.startsWith("http://") or opts.input.startsWith("https://"):
+      var client = newHttpClient()
+      try:
+        data = client.getContent(opts.input)
+      except Exception as e:
+        echo fmt("Failed to fetch URL {opts.input} - {e.msg}")
+        quit(1)
+      finally:
+        client.close()
+    else:
+      f = open(opts.input)
+      data = f.readAll()
+      defer: f.close()
 
     var jsonObject: JsonObject
 
@@ -49,12 +63,14 @@ proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
     else:
       discard
 
+    
+
     if inputType == "json":
-      jsonObject = jsonStringToJsonObject(f.readAll())
+      jsonObject = jsonStringToJsonObject(data)
     elif inputType == "gron":
-      jsonObject = gronStringToJsonObject(f.readAll())
+      jsonObject = gronStringToJsonObject(data)
     elif inputType == "jgron":
-      jsonObject = jgronStringToJsonObject(f.readAll())
+      jsonObject = jgronStringToJsonObject(data)
     else:
       echo "Unknown input type"
       quit(1)
