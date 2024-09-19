@@ -123,7 +123,7 @@ Options:
 ### Features 
 - Input Types
   - [x] File
-  - [ ] URL (http/https)
+  - [x] URL (http/https)
   - [x] stdin
 - Input formats
   - [x] JSON
