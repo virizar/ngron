@@ -1,7 +1,7 @@
 
 import std/unittest
 import std/os
-import std/osproc 
+import std/osproc
 import std/strformat
 import std/re
 import ngronpkg/json_object

@@ -480,7 +480,7 @@ proc isSorted*(self: JsonObject): bool =
     let sortedKeys = toSeq[string](self.props.keys()).sorted(system.cmp)
     if sortedKeys != toSeq[string](self.props.keys()):
       return false
-    
+
     for key, value in self.props.pairs():
       return value.isSorted()
   of Array:

@@ -31,7 +31,7 @@ proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
 
     var f: File = stdin
 
-    var data : string
+    var data: string
 
     if opts.input == "stdin" and not pipeInput:
       echo p.help
@@ -63,7 +63,7 @@ proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
     else:
       discard
 
-    
+
 
     if inputType == "json":
       jsonObject = jsonStringToJsonObject(data)
