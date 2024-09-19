@@ -1,5 +1,4 @@
 import std/strformat
-import std/algorithm
 import std/tables
 import token
 import tokenizer
