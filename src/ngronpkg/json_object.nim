@@ -1,6 +1,8 @@
 import std/strutils
 import std/enumerate
 import std/tables
+import std/algorithm
+import std/sequtils
 import std/strformat
 include styles
 
@@ -46,32 +48,25 @@ proc `$`*(self: JsonObject): string =
 proc `==`*(self: JsonObject, other: JsonObject): bool =
 
   if self.kind != other.kind:
-    echo "Kind mismatch"
     return false
 
   if self.value != other.value:
-    echo "Value mismatch"
     return false
 
   if self.items.len != other.items.len:
-    echo "Items length mismatch"
     return false
 
   if self.props.len != other.props.len:
-    echo "Props length mismatch"
     return false
 
   for i in 0..<self.items.len:
     if self.items[i] != other.items[i]:
-      echo fmt("Item mismatch at index {i}")
       return false
 
   for key, value in self.props.pairs():
     if not other.props.hasKey(key):
-      echo fmt("Key {key} not found in other")
       return false
     if value != other.props[key]:
-      echo fmt("Value mismatch for key {key}")
       return false
 
   true
@@ -477,3 +472,24 @@ proc printValues*(self: JsonObject, colorize: bool = false) =
   of Array:
     for obj in self.items:
       obj.printValues(colorize = colorize)
+
+proc isSorted*(self: JsonObject): bool =
+
+  case self.kind:
+  of Object:
+    let sortedKeys = toSeq[string](self.props.keys()).sorted(system.cmp)
+    if sortedKeys != toSeq[string](self.props.keys()):
+      return false
+    
+    for key, value in self.props.pairs():
+      return value.isSorted()
+  of Array:
+    let sortedItems = self.items.sorted(system.cmp)
+    if sortedItems != self.items:
+      return false
+
+    for obj in self.items:
+      return obj.isSorted()
+  else:
+    return true
+
