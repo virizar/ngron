@@ -4,6 +4,8 @@ import std/options
 import std/strformat
 import std/net
 import std/httpclient
+import tokenizer
+import base_parser
 import json_object
 import json_parser
 import gron_parser
@@ -63,18 +65,21 @@ proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
     else:
       discard
 
-
-
-    if inputType == "json":
-      jsonObject = jsonStringToJsonObject(data)
-    elif inputType == "gron":
-      jsonObject = gronStringToJsonObject(data)
-    elif inputType == "jgron":
-      jsonObject = jgronStringToJsonObject(data)
-    else:
-      echo "Unknown input type"
+    try:
+      if inputType == "json":
+        jsonObject = jsonStringToJsonObject(data)
+      elif inputType == "gron":
+        jsonObject = gronStringToJsonObject(data)
+      elif inputType == "jgron":
+        jsonObject = jgronStringToJsonObject(data)
+      else:
+        echo "Unknown input type"
+        quit(1)
+    except TokenizerException:
       quit(1)
-
+    except ParserException:
+      quit(1)
+    
     if opts.values:
       jsonObject.printValues()
       quit(0)

@@ -7,7 +7,7 @@ type
     current: int
     data: string
 
-  TokenizerException* = ref Exception
+  TokenizerException* = object of CatchableError
 
 proc newTokenizer*(data: string): Tokenizer =
   new(result)

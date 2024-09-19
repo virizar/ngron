@@ -8,7 +8,7 @@ type
     tokens*: seq[Token]
     data*: string
 
-  ParserException* = ref Exception
+  ParserException* = object of CatchableError
 
 proc error*(self: BaseParser, msg: string, span: int = 5) =
 
