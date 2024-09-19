@@ -21,7 +21,7 @@ var p = newParser:
   arg("input", help = "Path to file or URL path. Ignored if piping from  stdin",
       default = some("stdin"))
 
-proc runCli*(params: seq[string], pipeInput: bool) =
+proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
 
   try:
 
@@ -63,13 +63,15 @@ proc runCli*(params: seq[string], pipeInput: bool) =
       jsonObject.printValues()
       quit(0)
 
+    let colorize = opts.colorize and not pipeOutput
+
     if opts.outputType == "json":
-      jsonObject.printJson(sort = opts.sort, colorize = opts.colorize)
+      jsonObject.printJson(sort = opts.sort, colorize = colorize)
     elif opts.outputType == "jgron":
-      jsonObject.printJgron(sort = opts.sort, colorize = opts.colorize)
+      jsonObject.printJgron(sort = opts.sort, colorize = colorize)
     elif opts.outputType == "gron":
       jsonObject.printGron(sort = opts.sort, path = "json",
-          colorize = opts.colorize)
+          colorize = colorize)
     else:
       echo "Unknown output type"
       quit(1)
