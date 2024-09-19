@@ -79,6 +79,15 @@ proc parseValue(self: JsonParser): JsonObject =
     else:
       self.error(fmt("Cannot parse Token '{token}'"))
 
+proc parseValues(self: JsonParser): JsonObject =
+
+  result = newJsonObject(Array)
+  var items = newSeq[JsonObject]()
+
+  while self.current < self.tokens.len - 1:
+    items.add(self.parseValue())
+  result.items = items
+
 proc jsonStringToJsonObject*(data: string): JsonObject =
 
   var tokenizer = newTokenizer(data)
@@ -87,7 +96,11 @@ proc jsonStringToJsonObject*(data: string): JsonObject =
 
   var parser = newJsonParser(data, tokens)
 
-  parser.parseValue()
+  result = parser.parseValues()
+
+  if result.items.len == 1:
+    return result.items[0]
+
 
 
 

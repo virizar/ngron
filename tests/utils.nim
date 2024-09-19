@@ -35,3 +35,45 @@ oneJsonObject.props["isnull"] = newJsonObject(Null)
 oneJsonObject.props["isnull"].value = "null"
 oneJsonObject.props["id"] = newJsonObject(Number)
 oneJsonObject.props["id"].value = "66912849"
+
+let scalarStreamJsonObject* = newJsonObject(Array)
+scalarStreamJsonObject.items.add(newJsonObject(Boolean))
+scalarStreamJsonObject.items[0].value = "true"
+scalarStreamJsonObject.items.add(newJsonObject(Boolean))
+scalarStreamJsonObject.items[1].value = "false"
+scalarStreamJsonObject.items.add(newJsonObject(Null))
+scalarStreamJsonObject.items[2].value = "null"
+scalarStreamJsonObject.items.add(newJsonObject(String))
+scalarStreamJsonObject.items[3].value = "hello"
+scalarStreamJsonObject.items.add(newJsonObject(Number))
+scalarStreamJsonObject.items[4].value = "4"
+scalarStreamJsonObject.items.add(newJsonObject(Number))
+scalarStreamJsonObject.items[5].value = "4.4"
+
+let streamJsonObject* = newJsonObject(Array)
+streamJsonObject.items.add(newJsonObject(Object))
+streamJsonObject.items[0].props["one"] = newJsonObject(Number)
+streamJsonObject.items[0].props["one"].value = "1"
+streamJsonObject.items[0].props["three"] = newJsonObject(Array)
+streamJsonObject.items[0].props["three"].items.add(newJsonObject(Number))
+streamJsonObject.items[0].props["three"].items[0].value = "1"
+streamJsonObject.items[0].props["three"].items.add(newJsonObject(Number))
+streamJsonObject.items[0].props["three"].items[1].value = "2"
+streamJsonObject.items[0].props["three"].items.add(newJsonObject(Number))
+streamJsonObject.items[0].props["three"].items[2].value = "3"
+streamJsonObject.items[0].props["two"] = newJsonObject(Number)
+streamJsonObject.items[0].props["two"].value = "2"
+streamJsonObject.items.add(newJsonObject(Object))
+streamJsonObject.items[1].props["one"] = newJsonObject(Number)
+streamJsonObject.items[1].props["one"].value = "1"
+streamJsonObject.items[1].props["three"] = newJsonObject(Array)
+streamJsonObject.items[1].props["three"].items.add(newJsonObject(Number))
+streamJsonObject.items[1].props["three"].items[0].value = "1"
+streamJsonObject.items[1].props["three"].items.add(newJsonObject(Number))
+streamJsonObject.items[1].props["three"].items[1].value = "2"
+streamJsonObject.items[1].props["three"].items.add(newJsonObject(Number))
+streamJsonObject.items[1].props["three"].items[2].value = "3"
+streamJsonObject.items[1].props["two"] = newJsonObject(Number)
+streamJsonObject.items[1].props["two"].value = "2"
+
+

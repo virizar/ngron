@@ -10,6 +10,8 @@ import ngronpkg/gron_parser
 import ngronpkg/jgron_parser
 import utils
 
+discard execProcess("nimble build")
+
 test "json file to gron":
   let file = joinPath("tests", "resources", "gron", "one.json")
   let output = execProcess(fmt("./ngron {file}"))
