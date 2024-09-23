@@ -1,3 +1,4 @@
+.vscode/
 callgrind.*
 ngron
 profile_results.txt
