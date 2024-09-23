@@ -1,0 +1,6 @@
+Token(LeftBrace, '{')
+Token(String, 'body')
+Token(Colon, ':')
+Token(String, 'tons of escapes should be ignored \r\n\r\n\" ok')
+Token(RightBrace, '}')
+Token(Eof, '')

@@ -155,6 +155,8 @@ proc tokenize*(self: Tokenizer): seq[Token] =
     of '\'', '\"':
       let startP = self.current
       while self.peek() != curChar:
+        if self.peek() == '\\':
+          discard self.advance()
         discard self.advance()
       result.add(newToken(String, self.data[startP..<self.current], startP))
       discard self.advance()
