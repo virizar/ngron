@@ -2,7 +2,7 @@
 
 version       = "0.1.0"
 author        = "victor.irizar"
-description   = "A new awesome nimble package"
+description   = "Make JSON greppable in Nim"
 license       = "MIT"
 srcDir        = "src"
 installExt    = @["nim"]
