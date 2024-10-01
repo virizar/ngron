@@ -1,11 +1,11 @@
 on:
   pull_request:
     branches:
-      - master
+      - main
   push:
     branches:
       - devel
-      - master
+      - main
 
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
           - devel
         os:
           - ubuntu-latest
-          # - windows-latest
+          - windows-latest
           - macOS-latest
 
     name: '${{ matrix.nim }} (${{ matrix.os }})'
