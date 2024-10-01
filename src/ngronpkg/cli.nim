@@ -11,12 +11,15 @@ import json_parser
 import gron_parser
 import jgron_parser
 import argparse
+import nimclipboard/libclipboard
+
 
 var p = newParser:
-  help("Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable")
+  help("Transform JSON (from a file, URL, clipboard or stdin) into discrete assignments to make it greppable")
   flag("--version", help = "Print version information", shortcircuit = true)
   flag("-s", "--sort", help = "Sort keys (slower)")
   flag("-v", "--values", help = "Print just the values of provided assignments")
+  flag("-c", "--clipboard", help = "Use clipboard as input (ignores input argument)")
   flag("-r", "--raw", help = "Print without color")
   option("-i", "--input-type", choices = @["json", "gron", "jgron"],
       help = "Input type (Inferred from file extension)", default = some("json"))
@@ -35,11 +38,22 @@ proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
 
     var data: string
 
-    if opts.input == "stdin" and not pipeInput:
+    if opts.clipboard:
+
+      var cb = clipboard_new(nil)
+      try:
+        data = $cb.clipboard_text()
+      except Exception as e:
+        echo fmt("Failed to fetch clipboard - {e.msg}")
+        quit(1)
+      finally:
+        cb.clipboard_free()
+
+    elif opts.input == "stdin" and not pipeInput:
       echo p.help
       quit(1)
-
-    if opts.input.startsWith("http://") or opts.input.startsWith("https://"):
+    
+    elif opts.input.startsWith("http://") or opts.input.startsWith("https://"):
       var client = newHttpClient()
       try:
         data = client.getContent(opts.input)

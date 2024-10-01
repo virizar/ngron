@@ -92,10 +92,46 @@ And finally lets convert our `out.gron` file to get the original json input
 }
 ```
 
+You can also use your clipboard as an input source with the `-c` flag
+
+### CLI Help
+
+```
+Transform JSON (from a file, URL, clipboard or stdin) into discrete assignments to make it greppable
+
+Usage:
+   [options] [input]
+
+Arguments:
+  [input]          Path to file or URL path. Ignored if piping from  stdin (default: stdin)
+
+Options:
+  -h, --help
+  --version                  Print version information
+  -s, --sort                 Sort keys (slower)
+  -v, --values               Print just the values of provided assignments
+  -c, --clipboard            Use clipboard as input
+  -r, --raw                  Print without color (ignores input argument)
+  -i, --input-type=INPUT_TYPE
+                             Input type (Inferred from file extension) Possible values: [json, gron, jgron] (default: json)
+  -o, --output-type=OUTPUT_TYPE
+                             Output type Possible values: [json, gron, jgron] (default: gron)
+```
+
+### Requirements
+
+To build and develop you will need
+
+- `git`
+- `nimble`
+- `nim >= 2.0.4`
+
+
 ### Features 
 - Input Types
   - [x] File
   - [x] URL (http/https)
+  - [x] Clipboard
   - [x] stdin
 - Input formats
   - [x] JSON
@@ -114,15 +150,17 @@ And finally lets convert our `out.gron` file to get the original json input
 ### Things to do
 - [ ] Broader testing
   - Large files, weird characters.
+  - Windows, Mac OS 
 - [ ] Full compliance with JSON spec
   - Identifiers are not really compliant with the spec
 - [ ] Benchmarks and test
-  - Memory consumption and performance vs original implementation?
+  - Memory consumption and performance vs original implementation
 - [ ] Optimizations
   - Compact json object data structure
   - Stream input instead of reading all string in memory
   - Better handling of allocations in tokenizer/parser
-  - Multithreading?
+  - Multithreading
+- [ ] Prebuilt binaries
 
 ### Tests
 

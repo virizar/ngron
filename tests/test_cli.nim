@@ -9,6 +9,7 @@ import ngronpkg/json_parser
 import ngronpkg/gron_parser
 import ngronpkg/jgron_parser
 import utils
+import nimclipboard/libclipboard
 
 discard execProcess("nimble build")
 
@@ -60,3 +61,15 @@ test "gron file from https":
   let output = execProcess("./ngron -o gron https://jsonplaceholder.typicode.com/posts/1")
   discard gronStringToJsonObject(output)
 
+test "json file from clipboard":
+  let file = joinPath("tests", "resources", "gron", "one.json")
+  let f = open(file)
+  let data = f.readAll()
+  defer: f.close()
+  var cb = clipboard_new(nil)
+  defer: cb.clipboard_free()
+  cb.clipboard_clear(LCB_CLIPBOARD)
+  echo cb.clipboard_set_text(data)
+  let output = execProcess(fmt("./ngron -c "))
+  let result = gronStringToJsonObject(output)
+  check result == oneJsonObject
