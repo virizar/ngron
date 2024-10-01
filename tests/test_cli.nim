@@ -69,7 +69,10 @@ test "json file from clipboard":
   var cb = clipboard_new(nil)
   defer: cb.clipboard_free()
   cb.clipboard_clear(LCB_CLIPBOARD)
-  echo cb.clipboard_set_text(data)
-  let output = execProcess(fmt("./ngron -c "))
-  let result = gronStringToJsonObject(output)
-  check result == oneJsonObject
+  if cb.clipboard_set_text(data):
+
+    let output = execProcess(fmt("./ngron -c "))
+    let result = gronStringToJsonObject(output)
+    check result == oneJsonObject
+  else:
+    echo "Clipboard might not be available, skipping"
