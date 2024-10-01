@@ -1,0 +1,35 @@
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - devel
+      - master
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        nim:
+          - '2.0.x'
+          - 'stable'
+          - devel
+        os:
+          - ubuntu-latest
+          # - windows-latest
+          - macOS-latest
+
+    name: '${{ matrix.nim }} (${{ matrix.os }})'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup nim
+        uses: jiro4989/setup-nim-action@v2
+        with:
+          use-nightlies: true
+          nim-version: ${{ matrix.nim }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nimble install -y
+      - run: nimble test
+
