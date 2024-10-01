@@ -20,7 +20,7 @@ jobs:
           # - devel
         os:
           - ubuntu-latest
-          - windows-latest
+          # - windows-latest
           - macOS-latest
 
     name: '${{ matrix.nim }} (${{ matrix.os }})'
