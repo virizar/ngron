@@ -12,3 +12,4 @@ bin           = @["ngron"]
 # Dependencies
 
 requires "nim >= 2.0.4", "argparse >= 4.0.1"
+requires "nimclipboard >= 0.1.2 "
