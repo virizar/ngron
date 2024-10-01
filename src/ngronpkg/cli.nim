@@ -17,7 +17,7 @@ var p = newParser:
   flag("--version", help = "Print version information", shortcircuit = true)
   flag("-s", "--sort", help = "Sort keys (slower)")
   flag("-v", "--values", help = "Print just the values of provided assignments")
-  flag("-c", "--colorize", help = "Colorize output")
+  flag("-r", "--raw", help = "Print without color")
   option("-i", "--input-type", choices = @["json", "gron", "jgron"],
       help = "Input type (Inferred from file extension)", default = some("json"))
   option("-o", "--output-type", choices = @["json", "gron", "jgron"],
@@ -84,7 +84,7 @@ proc runCli*(params: seq[string], pipeInput: bool, pipeOutput: bool) =
       jsonObject.printValues()
       quit(0)
 
-    let colorize = opts.colorize and not pipeOutput
+    let colorize = not (opts.raw or pipeOutput)
 
     if opts.outputType == "json":
       jsonObject.printJson(sort = opts.sort, colorize = colorize)
