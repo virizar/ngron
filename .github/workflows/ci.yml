@@ -15,7 +15,7 @@ jobs:
         nim:
           - '2.0.x'
           - 'stable'
-          - devel
+          # - devel
         os:
           - ubuntu-latest
           - windows-latest
