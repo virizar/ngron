@@ -1,5 +1,8 @@
 # ngron
 
+![workflow](https://github.com/virizar/ngron/actions/workflows/ci.yml/badge.svg)
+![workflow](https://github.com/virizar/ngron/actions/workflows/doctest.yml/badge.svg)
+
 Nim reimplementation of the great [gron](https://github.com/tomnomnom/gron) tool.
 
 Converts json text into Javascript statements, and makes it easy to grep!
