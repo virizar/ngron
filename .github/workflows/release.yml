@@ -1,3 +1,8 @@
+on:
+  release:
+    types: [published]
+    branches: [main]
+
 permissions:
   contents: write
 
@@ -26,18 +31,22 @@ jobs:
        run: nimble build
 
      - name: Package 
-       run: zip ngron-${{ matrix.os }}.zip zip 
+       run: zip ngron-${{ matrix.os }}.zip ngron 
 
      - name: Upload an Asset in GitHub Release
        uses: "actions/github-script@v6"
        with:
          github-token: "${{ secrets.GITHUB_TOKEN }}"
          script: |
+
            const fs = require('fs').promises;
            await github.rest.repos.uploadReleaseAsset({
-             name: 'ngron',
+             name: 'ngron-${{ matrix.os }}',
              owner: context.repo.owner,
              repo: context.repo.repo,
-             release_id: ${{ env.RELEASE_ID }},
-             data: await fs.readFile('ngron-${{ matrix.os }}.zip')  # The file to upload.
+             release_id: ${{ github.event.release.id }},
+             data: await fs.readFile('ngron-${{ matrix.os }}.zip'),
            });
+
+
+
