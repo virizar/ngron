@@ -41,7 +41,7 @@ jobs:
 
            const fs = require('fs').promises;
            await github.rest.repos.uploadReleaseAsset({
-             name: 'ngron-${{ matrix.os }}',
+             name: 'ngron-${{ matrix.os }}.zip',
              owner: context.repo.owner,
              repo: context.repo.repo,
              release_id: ${{ github.event.release.id }},
