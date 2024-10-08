@@ -27,7 +27,9 @@ jobs:
         uses: actions/configure-pages@v3
 
       - name: Build docs
-        run: nimble gendoc -y
+        run: |
+          nimble gendoc -y
+          ls -l docs/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

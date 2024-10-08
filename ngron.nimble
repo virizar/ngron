@@ -15,7 +15,7 @@ requires "nim >= 2.0.4", "argparse >= 4.0.1"
 requires "nimclipboard >= 0.1.2 "
 
 task gendoc, "gen doc":
-  exec("nimble doc --backend:cpp --project src/ngron.nim --out:docs/")
+  exec("nimble doc --backend:c --project src/ngron.nim --out:docs/")
 
 # task test, "Run the tests":
 #   # run the manually to change the compilation flags

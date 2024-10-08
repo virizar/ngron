@@ -28,7 +28,7 @@ jobs:
 
 
      - name: Build
-       run: nimble build
+       run: nimble build -d:danger
 
      - name: Package 
        run: zip ngron-${{ matrix.os }}.zip ngron 
