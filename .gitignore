@@ -9,5 +9,4 @@ tests/*
 !tests/*.nims
 !tests/resources
 !tests/resources/gron
-docs/
-!docs/index.html
+
