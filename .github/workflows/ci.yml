@@ -2,10 +2,13 @@ on:
   pull_request:
     branches:
       - main
+
   push:
     branches:
       - devel
       - main
+
+name: CI - Test
 
 jobs:
   build:

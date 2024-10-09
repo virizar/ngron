@@ -1,0 +1,52 @@
+on:
+  release:
+    types: [published]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+        matrix:
+          os:
+            - ubuntu-latest
+            - macOS-latest
+            # - windows-latest
+
+    steps:
+     - name: Checkout
+       uses: actions/checkout@v4
+
+     - name: Setup nim
+       uses: jiro4989/setup-nim-action@v2
+       with:
+         nim-version: stable 
+         repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+
+     - name: Build
+       run: nimble build -d:danger
+
+     - name: Package 
+       run: zip ngron-${{ matrix.os }}.zip ngron 
+
+     - name: Upload an Asset in GitHub Release
+       uses: "actions/github-script@v6"
+       with:
+         github-token: "${{ secrets.GITHUB_TOKEN }}"
+         script: |
+
+           const fs = require('fs').promises;
+           await github.rest.repos.uploadReleaseAsset({
+             name: 'ngron-${{ matrix.os }}.zip',
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             release_id: ${{ github.event.release.id }},
+             data: await fs.readFile('ngron-${{ matrix.os }}.zip'),
+           });
+
+
+
